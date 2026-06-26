@@ -84,24 +84,29 @@ export default function Dashboard() {
   return (
     <PageWrapper>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h2 className="text-2xl font-display" style={{ color: 'var(--text-primary)' }}>Good afternoon, {user?.name || 'User'}</h2>
+          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-medium">
+            <span>Welcome back, {user?.name?.split(' ')[0] || 'User'}</span>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--border-subtle)' }} />
+            <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+          </div>
           {loading ? (
-            <div className="skeleton h-4 w-64 rounded mt-2" />
+            <div className="skeleton h-3 w-48 rounded mt-1.5" />
           ) : (
-            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Your agents handled <strong style={{ color: 'var(--text-primary)' }}>{stats?.todayMessages ?? 0}</strong> conversations today.
-            </p>
+            <h2 className="text-md font-medium mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              Agents actively monitoring <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{stats?.activeLeads ?? 0}</strong> leads today
+            </h2>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button
             variant="primary"
             size="sm"
-            icon={<Megaphone size={14} />}
+            icon={<Megaphone size={13} />}
             onClick={() => navigate('/campaigns')}
             data-tour="new-campaign"
+            style={{ borderRadius: '8px', padding: '6px 12px', fontSize: '12px' }}
           >
             New Campaign
           </Button>

@@ -124,7 +124,13 @@ export function Sidebar() {
                   to={item.to}
                   className={cn('nav-item', isActive && 'active')}
                   title={sidebarCollapsed ? item.label : undefined}
-                  data-tour={item.to === '/conversations' ? 'conversations-link' : undefined}
+                  data-tour={
+                    item.to === '/conversations' ? 'conversations-link' :
+                    item.to === '/booking' ? 'booking-link' :
+                    item.to === '/ai-tester' ? 'ai-tester-link' :
+                    item.to === '/content-studio' ? 'content-studio-link' :
+                    undefined
+                  }
                 >
                   <span className="nav-icon flex-shrink-0">{item.icon}</span>
 

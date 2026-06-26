@@ -38,6 +38,27 @@ const TOUR_STEPS = [
     title: 'Conversations & Human Takeover',
     content: 'Monitor automated chats. Check qualification scores and click "Take Over" to chat manually with hot leads.',
     placement: 'right'
+  },
+  {
+    selector: '[data-tour="content-studio-link"]',
+    route: '/dashboard',
+    title: 'Content Studio',
+    content: 'Generate localized, high-conversion WhatsApp templates automatically. Use Case: Craft personalized property list pitches or follow-ups matching your campaign rules.',
+    placement: 'right'
+  },
+  {
+    selector: '[data-tour="booking-link"]',
+    route: '/dashboard',
+    title: 'Booking Agent Config',
+    content: 'Configure the AI agent to dynamically schedule property viewings on your calendar. Use Case: The AI detects scheduling intent, offers available slots, and books appointments seamlessly.',
+    placement: 'right'
+  },
+  {
+    selector: '[data-tour="ai-tester-link"]',
+    route: '/dashboard',
+    title: 'AI Sandbox',
+    content: 'Test and debug your AI agent\'s responses in a safe environment. Use Case: Roleplay with your custom agents in real-time to preview how they respond to tough lead objections.',
+    placement: 'right'
   }
 ];
 
