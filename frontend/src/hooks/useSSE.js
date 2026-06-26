@@ -49,7 +49,8 @@ export function useSSE() {
       return;
     }
 
-    const es = new EventSource('/api/events', { withCredentials: true });
+    const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
+    const es = new EventSource(`${apiBaseUrl}/events`, { withCredentials: true });
     esRef.current = es;
 
     es.onopen = () => {

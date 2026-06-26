@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios'; // use regular axios for auth calls to avoid circular dependency with api.js
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
+
 /**
  * Auth Store — user session state
  */
@@ -19,7 +21,7 @@ const useAuthStore = create(
       login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-          const res = await axios.post('/api/auth/login', { email, password });
+          const res = await axios.post(`${apiBaseUrl}/auth/login`, { email, password });
           const { user, accessToken, refreshToken } = res.data.data;
           
           set({
@@ -40,7 +42,7 @@ const useAuthStore = create(
       register: async (name, email, password, businessName) => {
         set({ isLoading: true, error: null });
         try {
-          const res = await axios.post('/api/auth/register', { name, email, password, businessName });
+          const res = await axios.post(`${apiBaseUrl}/auth/register`, { name, email, password, businessName });
           const { user, accessToken, refreshToken } = res.data.data;
           
           set({
@@ -77,7 +79,7 @@ const useAuthStore = create(
           const token = get().token;
           if (!token) throw new Error("No authorization token");
           
-          const res = await axios.put('/api/auth/me', { name, email }, {
+          const res = await axios.put(`${apiBaseUrl}/auth/me`, { name, email }, {
             headers: { Authorization: `Bearer ${token}` }
           });
           
@@ -102,7 +104,7 @@ const useAuthStore = create(
         const token = get().token;
         if (!token) return;
         try {
-          const res = await axios.get('/api/auth/me', {
+          const res = await axios.get(`${apiBaseUrl}/auth/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           set({ user: res.data.data });
