@@ -656,3 +656,21 @@ code, pre, .font-mono {
 }
 .radix-select-item:hover,
 .radix-select-item[data-highlighted] { background: var(--accent-light); color: var(--accent); }
+
+/* Heartbeat & Glow Animation */
+.heartbeat-line {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: draw-heartbeat 4s linear infinite, heartbeat-glow 2.5s ease-in-out infinite;
+}
+
+@keyframes draw-heartbeat {
+  0% { stroke-dashoffset: 600; }
+  50% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -600; }
+}
+
+@keyframes heartbeat-glow {
+  0%, 100% { opacity: 0.45; stroke-width: 1.5; filter: drop-shadow(0 0 1px rgba(196, 101, 74, 0.4)); }
+  50% { opacity: 1; stroke-width: 2.5; filter: drop-shadow(0 0 4px var(--accent)); }
+}

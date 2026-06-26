@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, Sun, Moon, Search, LogOut, Mail, Building } from 'lucide-react';
+import { Bell, Sun, Moon, Search, LogOut, Mail, Building, HelpCircle } from 'lucide-react';
 import api from '@/services/api';
 import useAuthStore from '@/stores/authStore';
 import useActivityStore from '@/stores/activityStore';
@@ -117,6 +117,7 @@ export function Topbar() {
     >
       {/* ── Floating Capsule Container ── */}
       <div
+        data-tour="topbar"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -211,6 +212,19 @@ export function Topbar() {
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          </Tooltip>
+
+          {/* Website Tour Toggle */}
+          <Tooltip content="Start Website Tour">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('start-guided-tour'))}
+              aria-label="Start Website Tour"
+              style={iconBtn({ width: 32, height: 32 })}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-glass)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <HelpCircle size={16} />
             </button>
           </Tooltip>
 

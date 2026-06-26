@@ -6,7 +6,40 @@ import { cn } from '@/utils/cn';
 /**
  * Stat card with GSAP count-up animation
  */
-export function StatCard({ title, value, unit = '', trend, trendLabel, icon, color = 'accent', loading = false }) {
+function Sparkline({ data, trend }) {
+  if (!data || data.length < 2) return null;
+  const width = 64;
+  const height = 18;
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min === 0 ? 1 : max - min;
+  
+  const coordinates = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const color = trend > 0 ? 'var(--success)' : trend < 0 ? 'var(--danger)' : 'var(--text-muted)';
+
+  return (
+    <svg width={width} height={height} className="overflow-visible ml-auto self-center">
+      <polyline
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={coordinates}
+      />
+    </svg>
+  );
+}
+
+/**
+ * Stat card with GSAP count-up animation and mini sparkline
+ */
+export function StatCard({ title, value, unit = '', trend, trendLabel, icon, color = 'accent', loading = false, sparklineData }) {
   const valueRef = useRef(null);
   const numericValue = parseFloat(String(value).replace(/,/g, '')) || 0;
 
@@ -67,14 +100,19 @@ export function StatCard({ title, value, unit = '', trend, trendLabel, icon, col
         )}
       </div>
 
-      <div className="flex items-baseline gap-1">
-        <p
-          ref={valueRef}
-          className="text-2xl stat-value"
-          style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}
-        >
-          {formatValue(numericValue, unit)}
-        </p>
+      <div className="flex items-center justify-between mt-1">
+        <div className="flex items-baseline gap-1">
+          <p
+            ref={valueRef}
+            className="text-2xl stat-value"
+            style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}
+          >
+            {formatValue(numericValue, unit)}
+          </p>
+        </div>
+        {sparklineData && (
+          <Sparkline data={sparklineData} trend={trend} />
+        )}
       </div>
 
       {(trend !== undefined || trendLabel) && (

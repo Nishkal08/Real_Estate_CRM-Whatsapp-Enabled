@@ -4,6 +4,7 @@ import { useLocation, useOutlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { ToastContainer } from '@/components/ui/Toast';
+import { GuidedTour } from '@/components/ui/GuidedTour';
 import useUIStore from '@/stores/uiStore';
 import { useSSE } from '@/hooks/useSSE';
 import { useHotkeys } from '@/hooks/useHotkeys';
@@ -57,6 +58,7 @@ export function AppShell() {
       </div>
 
       <ToastContainer />
+      <GuidedTour />
     </div>
   );
 }

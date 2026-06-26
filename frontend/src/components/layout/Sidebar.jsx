@@ -50,6 +50,7 @@ export function Sidebar() {
   return (
     <motion.aside
       className="sidebar"
+      data-tour="sidebar"
       animate={{ width: sidebarCollapsed ? 56 : 220 }}
       transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
     >
@@ -123,6 +124,7 @@ export function Sidebar() {
                   to={item.to}
                   className={cn('nav-item', isActive && 'active')}
                   title={sidebarCollapsed ? item.label : undefined}
+                  data-tour={item.to === '/conversations' ? 'conversations-link' : undefined}
                 >
                   <span className="nav-icon flex-shrink-0">{item.icon}</span>
 
