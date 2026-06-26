@@ -70,21 +70,6 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// GET /api/health/ngrok
-app.get('/api/health/ngrok', async (req, res, next) => {
-  try {
-    const response = await fetch('http://127.0.0.1:4040/api/tunnels');
-    if (!response.ok) {
-      return res.json({ success: true, online: false });
-    }
-    const data = await response.json();
-    const publicUrl = data.tunnels?.[0]?.public_url || null;
-    res.json({ success: true, online: !!publicUrl, publicUrl });
-  } catch (err) {
-    res.json({ success: true, online: false });
-  }
-});
-
 // GET /api/health/twilio — Validate Twilio credentials without sending a message
 app.get('/api/health/twilio', async (req, res, next) => {
   try {
@@ -126,41 +111,6 @@ app.get('/api/health/twilio', async (req, res, next) => {
     });
   } catch (err) {
     res.json({ success: false, status: 'error', message: err.message });
-  }
-});
-
-// POST /api/health/ngrok/start
-app.post('/api/health/ngrok/start', async (req, res, next) => {
-  try {
-    const { exec, spawn } = require('child_process');
-    const os = require('os');
-
-    // 1. Clean up any existing stale or locked ngrok processes to avoid binding conflicts
-    console.log('[Ngrok AutoStart] Cleaning up any old ngrok processes...');
-    await new Promise((resolve) => {
-      exec('taskkill /f /im ngrok.exe', { shell: true }, (err) => {
-        // Ignore errors (e.g. process not found)
-        resolve();
-      });
-    });
-
-    // 2. Spawn a fresh ngrok instance detached from this process
-    console.log('[Ngrok AutoStart] Spawning fresh ngrok tunnel (detached)...');
-    const ngrokProcess = spawn('npx', ['-y', 'ngrok', 'http', '--url=lip-panhandle-pulse.ngrok-free.dev', '5000'], {
-      cwd: os.tmpdir(),
-      shell: true,
-      detached: true,
-      stdio: 'ignore'
-    });
-
-    ngrokProcess.unref();
-
-    // Wait a brief 2.5 seconds to allow ngrok to initialize and bind the tunnel
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    res.json({ success: true, message: 'Tunnel start initiated' });
-  } catch (err) {
-    next(err);
   }
 });
 

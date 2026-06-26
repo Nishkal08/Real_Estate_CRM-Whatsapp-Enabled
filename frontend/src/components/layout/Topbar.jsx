@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, Sun, Moon, Search, RefreshCw, LogOut, Mail, Building } from 'lucide-react';
+import { Bell, Sun, Moon, Search, LogOut, Mail, Building } from 'lucide-react';
 import api from '@/services/api';
 import useAuthStore from '@/stores/authStore';
 import useActivityStore from '@/stores/activityStore';
@@ -54,7 +54,7 @@ export function Topbar() {
   const location                = useLocation();
   const title                   = getTitle(location.pathname);
 
-  const [ngrok, setNgrok] = useState({ online: false, publicUrl: null, checking: true, starting: false });
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
@@ -94,37 +94,7 @@ export function Topbar() {
     }
   };
 
-  const checkNgrok = async () => {
-    try {
-      const res = await api.get('/health/ngrok');
-      if (res.data.success) {
-        setNgrok({
-          online: res.data.online,
-          publicUrl: res.data.publicUrl,
-          checking: false,
-          starting: false
-        });
-      }
-    } catch (err) {
-      setNgrok(prev => ({ ...prev, online: false, checking: false }));
-    }
-  };
 
-  useEffect(() => {
-    checkNgrok();
-    const interval = setInterval(checkNgrok, 15000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleStartNgrok = async () => {
-    setNgrok(prev => ({ ...prev, starting: true }));
-    try {
-      await api.post('/health/ngrok/start');
-      setTimeout(checkNgrok, 2500);
-    } catch (err) {
-      setNgrok(prev => ({ ...prev, starting: false }));
-    }
-  };
 
   // Mirror AppShell's content offset: 12 (sidebar left) + width + 12 (gap) + 16 (content right pad)
   const sidebarWidth  = sidebarCollapsed ? 56 : 220;
@@ -180,66 +150,7 @@ export function Topbar() {
         {/* RIGHT — search + actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
 
-          {/* Ngrok status indicator */}
-          <Tooltip content={ngrok.online ? `Webhook Tunnel: ${ngrok.publicUrl}` : "Incoming WhatsApp Webhook Tunnel is OFFLINE. Twilio cannot deliver messages."}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 10px',
-                borderRadius: 8,
-                background: ngrok.online ? 'rgba(34, 197, 94, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-                border: `1px solid ${ngrok.online ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)'}`,
-                color: ngrok.online ? '#22c55e' : '#ef4444',
-                fontSize: 12,
-                fontWeight: 500,
-                fontFamily: 'var(--font-body)',
-                marginRight: 6,
-              }}
-            >
-              <span
-                className={ngrok.online ? "animate-pulse" : ""}
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  background: ngrok.online ? '#22c55e' : '#ef4444',
-                  boxShadow: ngrok.online ? '0 0 8px #22c55e' : '0 0 8px #ef4444',
-                }}
-              />
-              <span style={{ whiteSpace: 'nowrap' }}>
-                {ngrok.online ? 'Tunnel Online' : 'Tunnel Offline'}
-              </span>
 
-              {ngrok.starting ? (
-                <RefreshCw size={12} className="animate-spin" style={{ marginLeft: 4, color: '#ef4444' }} />
-              ) : (
-                !ngrok.online && (
-                  <button
-                    onClick={handleStartNgrok}
-                    style={{
-                      border: 'none',
-                      background: '#ef4444',
-                      color: '#fff',
-                      fontSize: 10,
-                      fontWeight: 600,
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      cursor: 'pointer',
-                      marginLeft: 6,
-                      fontFamily: 'var(--font-body)',
-                      transition: 'background 0.14s',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#dc2626')}
-                    onMouseLeave={e => (e.currentTarget.style.background = '#ef4444')}
-                  >
-                    Go Live
-                  </button>
-                )
-              )}
-            </div>
-          </Tooltip>
 
           {/* Search container */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
