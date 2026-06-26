@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Users, Megaphone, MessageSquare, Star,
   Flame, CheckCircle2, Zap, Bell, Activity,
@@ -33,6 +34,13 @@ const ACTIVITY_COLORS = {
   campaign_launched: { bg: 'var(--success-bg)', color: 'var(--success)' },
   appointment_booked:{ bg: 'var(--success-bg)', color: 'var(--success)' },
 };
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -86,9 +94,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-medium">
-            <span>Welcome back, {user?.name?.split(' ')[0] || 'User'}</span>
-            <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--border-subtle)' }} />
+          <div className="flex items-center gap-2 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            <span>{getGreeting()}, {user?.name?.split(' ')[0] || 'User'}</span>
+            <span style={{ width: 3, height: 3, borderRadius: '50%', background: 'var(--border-strong)', display: 'inline-block' }} />
             <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
           </div>
           {loading ? (
@@ -113,11 +121,19 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)] mb-6">
+      {/* Bento Grid Layout — staggered entrance */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)] mb-6"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+        }}
+      >
         
         {/* Col 1: Total Leads */}
-        <div className="lg:col-span-1">
+        <motion.div className="lg:col-span-1" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           <StatCard
             title="Total Leads"
             value={stats?.totalLeads ?? 0}
@@ -128,10 +144,10 @@ export default function Dashboard() {
             color="accent"
             sparklineData={[140, 180, 220, 190, 240, 290, stats?.totalLeads ?? 312]}
           />
-        </div>
+        </motion.div>
 
         {/* Col 2: Messages Sent */}
-        <div className="lg:col-span-1">
+        <motion.div className="lg:col-span-1" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           <StatCard
             title="Messages Sent"
             value={stats?.messagesSent ?? 0}
@@ -142,10 +158,10 @@ export default function Dashboard() {
             color="accent"
             sparklineData={[450, 520, 590, 680, 710, 840, stats?.messagesSent ?? 910]}
           />
-        </div>
+        </motion.div>
 
         {/* Col 3: Qualified Leads */}
-        <div className="lg:col-span-1">
+        <motion.div className="lg:col-span-1" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           <StatCard
             title="Qualified Leads"
             value={stats?.qualifiedLeads ?? 0}
@@ -156,10 +172,9 @@ export default function Dashboard() {
             color="warning"
             sparklineData={[15, 28, 34, 45, 62, 78, stats?.qualifiedLeads ?? 84]}
           />
-        </div>
-
+        </motion.div>
         {/* Col 4: Agent Engine / AI Status with Pulse Heartbeat */}
-        <div className="lg:col-span-1">
+        <motion.div className="lg:col-span-1" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           {loading ? (
             <div className="card-no-hover h-full flex flex-col justify-center">
               <div className="skeleton h-3 w-24 mb-4 rounded" />
@@ -216,10 +231,10 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Col 1 & 2 (Row 2 & 3): Live Activity Feed */}
-        <div className="lg:col-span-2 lg:row-span-2">
+        <motion.div className="lg:col-span-2 lg:row-span-2" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           <div className="card-no-hover h-full flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -267,7 +282,8 @@ export default function Dashboard() {
                         className="flex items-start gap-3 py-2 px-3 rounded-xl transition-all cursor-pointer hover:bg-[var(--bg-surface)]"
                         style={{
                           background: act.read ? 'transparent' : 'var(--accent-light)',
-                          borderLeft: act.read ? 'none' : `2px solid var(--accent)`,
+                          outline: act.read ? 'none' : '1px solid rgba(207,113,85,0.18)',
+                          outlineOffset: '-1px',
                         }}
                         onClick={() => handleActivityClick(act)}
                       >
@@ -295,10 +311,10 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Col 3 (Row 2 & 3): Outreach Funnel with Stacked segments */}
-        <div className="lg:col-span-1 lg:row-span-2">
+        <motion.div className="lg:col-span-1 lg:row-span-2" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           <div className="card-no-hover h-full flex flex-col justify-between space-y-4">
             <div>
               <h2 className="text-md font-medium" style={{ color: 'var(--text-primary)' }}>Outreach Funnel</h2>
@@ -363,10 +379,10 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Col 4 (Row 2): Hot Leads Alert */}
-        <div className="lg:col-span-1">
+        <motion.div className="lg:col-span-1" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           {loading ? (
             <div className="card-no-hover space-y-3 h-full flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-2">
@@ -384,7 +400,10 @@ export default function Dashboard() {
           ) : hotLeads.length > 0 ? (
             <div
               className="card-no-hover h-full flex flex-col justify-between"
-              style={{ borderLeft: '3px solid var(--danger)' }}
+              style={{
+                borderTop: '2px solid var(--danger)',
+                boxShadow: `var(--shadow-card), 0 0 0 1px rgba(200,79,79,0.08)`,
+              }}
             >
               <div className="flex items-center gap-2 mb-2">
                 <div
@@ -438,10 +457,8 @@ export default function Dashboard() {
               <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>No handoffs pending</p>
             </div>
           )}
-        </div>
-
-        {/* Col 4 (Row 3): Active Campaign mini Card */}
-        <div className="lg:col-span-1">
+        </motion.div>
+        <motion.div className="lg:col-span-1" variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }}>
           {loading ? (
             <div className="card-no-hover space-y-3 h-full flex flex-col justify-center">
               <div className="flex justify-between items-center mb-2">
@@ -490,9 +507,8 @@ export default function Dashboard() {
               </Button>
             </div>
           )}
-        </div>
-
-      </div>
+        </motion.div>
+      </motion.div>
     </PageWrapper>
   );
 }

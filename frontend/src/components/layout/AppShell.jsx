@@ -1,10 +1,11 @@
-import { cloneElement } from 'react';
+import { cloneElement, useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useLocation, useOutlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { ToastContainer } from '@/components/ui/Toast';
 import { GuidedTour } from '@/components/ui/GuidedTour';
+import { CommandPalette } from '@/components/ui/CommandPalette';
 import useUIStore from '@/stores/uiStore';
 import { useSSE } from '@/hooks/useSSE';
 import { useHotkeys } from '@/hooks/useHotkeys';
@@ -19,9 +20,22 @@ export function AppShell() {
   const { sidebarCollapsed } = useUIStore();
   const location = useLocation();
   const outlet = useOutlet();
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   useSSE();
   useHotkeys();
+
+  // Global ⌘K / Ctrl+K shortcut
+  useEffect(() => {
+    const handleKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setPaletteOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   // 12px sidebar offset + sidebar width + 12px gap to content
   const sidebarWidth   = sidebarCollapsed ? 56 : 220;
@@ -59,6 +73,7 @@ export function AppShell() {
 
       <ToastContainer />
       <GuidedTour />
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

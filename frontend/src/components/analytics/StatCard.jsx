@@ -8,29 +8,45 @@ import { cn } from '@/utils/cn';
  */
 function Sparkline({ data, trend }) {
   if (!data || data.length < 2) return null;
-  const width = 64;
-  const height = 18;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min === 0 ? 1 : max - min;
-  
-  const coordinates = data.map((val, i) => {
+  const width  = 64;
+  const height = 22;
+  const max    = Math.max(...data);
+  const min    = Math.min(...data);
+  const range  = max - min === 0 ? 1 : max - min;
+  const gradId = `sg-${trend > 0 ? 'up' : 'dn'}`;
+
+  const pts = data.map((val, i) => {
     const x = (i / (data.length - 1)) * width;
-    const y = height - ((val - min) / range) * height;
-    return `${x},${y}`;
-  }).join(' ');
+    const y = height - ((val - min) / range) * (height - 2) - 1;
+    return [x, y];
+  });
+
+  const linePoints  = pts.map(([x, y]) => `${x},${y}`).join(' ');
+  const areaPoints  = [
+    `0,${height}`,
+    ...pts.map(([x, y]) => `${x},${y}`),
+    `${width},${height}`,
+  ].join(' ');
 
   const color = trend > 0 ? 'var(--success)' : trend < 0 ? 'var(--danger)' : 'var(--text-muted)';
+  const alphaColor = trend > 0 ? 'rgba(94,143,84,' : trend < 0 ? 'rgba(200,79,79,' : 'rgba(120,102,90,';
 
   return (
-    <svg width={width} height={height} className="overflow-visible ml-auto self-center">
+    <svg width={width} height={height} className="overflow-visible ml-auto self-center" style={{ flexShrink: 0 }}>
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stopColor={`${alphaColor}0.18)`} />
+          <stop offset="100%" stopColor={`${alphaColor}0)`} />
+        </linearGradient>
+      </defs>
+      <polygon fill={`url(#${gradId})`} points={areaPoints} />
       <polyline
         fill="none"
         stroke={color}
-        strokeWidth="1.5"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points={coordinates}
+        points={linePoints}
       />
     </svg>
   );

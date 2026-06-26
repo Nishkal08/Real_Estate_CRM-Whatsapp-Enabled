@@ -56,6 +56,7 @@ export function Topbar() {
 
 
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen]     = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
@@ -153,8 +154,14 @@ export function Topbar() {
 
 
 
-          {/* Search container */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          {/* Search container — opens Command Palette */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}
+            onKeyDown={e => e.key === 'Enter' && window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}
+            style={{ position: 'relative', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+          >
             <Search
               size={14}
               style={{
@@ -164,12 +171,10 @@ export function Topbar() {
                 pointerEvents: 'none',
               }}
             />
-            <input
-              readOnly
-              placeholder="Search or jump to..."
+            <div
               style={{
                 height: 36,
-                width: 250,
+                width: 220,
                 paddingLeft: 34,
                 paddingRight: 50,
                 borderRadius: 8,
@@ -178,10 +183,22 @@ export function Topbar() {
                 color: 'var(--text-muted)',
                 fontSize: 13,
                 fontFamily: 'var(--font-body)',
-                cursor: 'pointer',
-                outline: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                transition: 'border-color 180ms, box-shadow 180ms',
+                userSelect: 'none',
               }}
-            />
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'var(--accent)';
+                e.currentTarget.style.boxShadow = '0 0 0 3px var(--accent-light)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              Search or jump to...
+            </div>
             <kbd
               style={{
                 position: 'absolute',
@@ -196,6 +213,7 @@ export function Topbar() {
                 lineHeight: 1.5,
                 letterSpacing: '0em',
                 whiteSpace: 'nowrap',
+                pointerEvents: 'none',
               }}
             >
               ⌘K
@@ -228,31 +246,92 @@ export function Topbar() {
             </button>
           </Tooltip>
 
-          {/* Notifications */}
-          <Tooltip content="Notifications">
-            <button
-              aria-label="Notifications"
-              style={iconBtn({ position: 'relative', width: 32, height: 32 })}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-glass)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-            >
-              <Bell size={16} />
-              {unreadCount > 0 && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 6,
-                    right: 7,
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    background: 'var(--accent)',
-                    border: '1.5px solid var(--bg-glass-strong)',
-                  }}
-                />
-              )}
-            </button>
-          </Tooltip>
+          {/* Notifications — with dropdown */}
+          <div style={{ position: 'relative' }}>
+            <Tooltip content="Notifications">
+              <button
+                aria-label="Notifications"
+                onClick={() => setNotifOpen(o => !o)}
+                style={iconBtn({ position: 'relative', width: 32, height: 32 })}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-glass)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <Bell size={16} />
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 6, right: 7,
+                      width: 7, height: 7,
+                      borderRadius: '50%',
+                      background: 'var(--accent)',
+                      border: '1.5px solid var(--bg-glass-strong)',
+                    }}
+                  />
+                )}
+              </button>
+            </Tooltip>
+
+            {/* Notification Dropdown */}
+            {notifOpen && (
+              <>
+                <div onClick={() => setNotifOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                <div style={{
+                  position: 'absolute', top: 38, right: 0,
+                  width: 300, zIndex: 50,
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 14,
+                  boxShadow: 'var(--shadow-float)',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px 8px',
+                    borderBottom: '1px solid var(--border-glass)',
+                  }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>Notifications</span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={() => { useActivityStore.getState().markAllRead(); setNotifOpen(false); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: 'var(--accent)', fontFamily: 'var(--font-body)' }}
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+                    {useActivityStore.getState().activities.length === 0 ? (
+                      <p style={{ textAlign: 'center', padding: '20px 0', fontSize: 12, color: 'var(--text-muted)' }}>No notifications</p>
+                    ) : (
+                      useActivityStore.getState().activities.slice(0, 5).map(act => (
+                        <div key={act.id} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 10,
+                          padding: '9px 14px',
+                          borderBottom: '1px solid var(--border-glass)',
+                          background: act.read ? 'transparent' : 'var(--accent-light)',
+                          cursor: 'pointer',
+                          transition: 'background 120ms',
+                        }}
+                          onClick={() => { useActivityStore.getState().markRead(act.id); setNotifOpen(false); }}
+                          onMouseEnter={e => !act.read && (e.currentTarget.style.background = 'var(--bg-surface)')}
+                          onMouseLeave={e => !act.read && (e.currentTarget.style.background = 'var(--accent-light)')}
+                        >
+                          {!act.read && (
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: 5 }} />
+                          )}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 1 }}>{act.title}</p>
+                            <p style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{act.description}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* User avatar */}
           <Tooltip content={user?.name || 'Account'}>

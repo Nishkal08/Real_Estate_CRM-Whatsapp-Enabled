@@ -79,40 +79,49 @@
 }
 
 /* ============================================
-   DARK MODE TOKENS — warm dark ink
+   DARK MODE TOKENS — deep obsidian with warm glow
    ============================================ */
 .dark {
-  --bg-page:         #18130F;
-  --bg-glass:        rgba(30, 22, 16, 0.75);
-  --bg-glass-strong: rgba(30, 22, 16, 0.92);
-  --bg-surface:      rgba(38, 28, 20, 0.55);
-  --bg-elevated:     rgba(38, 28, 20, 0.97);
+  /* ─── 3-tier background depth ─── */
+  --bg-page:         #0D0907;            /* deepest layer — true ink black */
+  --bg-glass:        rgba(255, 235, 210, 0.035); /* floating surface */
+  --bg-glass-strong: rgba(255, 235, 210, 0.065); /* card face */
+  --bg-surface:      rgba(255, 230, 200, 0.045); /* inset elements */
+  --bg-elevated:     #1A1108;            /* modals, dropdowns — visibly lifted */
 
-  --border-glass:    rgba(255, 240, 220, 0.07);
-  --border-subtle:   rgba(80, 60, 45, 0.70);
-  --border-strong:   rgba(110, 85, 65, 0.85);
+  /* ─── borders — visible but not harsh ─── */
+  --border-glass:    rgba(255, 215, 175, 0.10);  /* card edges, gentle warm rim */
+  --border-subtle:   rgba(255, 205, 160, 0.14);  /* section dividers */
+  --border-strong:   rgba(255, 195, 145, 0.22);  /* active/focus rings */
 
-  --text-primary:    #EDE8E2;
-  --text-secondary:  #A89888;
-  --text-muted:      #6A5A50;
+  /* ─── text — warm ivory hierarchy ─── */
+  --text-primary:    #EEE8DF;  /* near-white warm ivory */
+  --text-secondary:  #A8967E;  /* warm sand */
+  --text-muted:      #78665A;  /* readable — not invisible */
 
-  --accent:          #D4755A;
-  --accent-light:    rgba(212, 117, 90, 0.14);
-  --accent-hover:    #E0836A;
-  --accent-text:     #E8A090;
+  /* ─── terracotta accent — slightly warmer in dark ─── */
+  --accent:          #CF7155;
+  --accent-light:    rgba(207, 113, 85, 0.13);
+  --accent-hover:    #DC8165;
+  --accent-text:     #ECA080;
 
-  --success:         #6A9460;
-  --success-bg:      rgba(106, 148, 96, 0.12);
-  --warning:         #C49240;
-  --warning-bg:      rgba(196, 146, 64, 0.12);
-  --danger:          #D05555;
-  --danger-bg:       rgba(208, 85, 85, 0.12);
-  --info:            #5A8AAE;
-  --info-bg:         rgba(90, 138, 174, 0.12);
+  /* ─── semantic — muted for dark context ─── */
+  --success:         #5E8F54;
+  --success-bg:      rgba(94, 143, 84, 0.11);
+  --warning:         #BD8C38;
+  --warning-bg:      rgba(189, 140, 56, 0.11);
+  --danger:          #C84F4F;
+  --danger-bg:       rgba(200, 79, 79, 0.11);
+  --info:            #527EA0;
+  --info-bg:         rgba(82, 126, 160, 0.11);
 
-  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.18);
-  --shadow-float: 0 8px 32px rgba(0, 0, 0, 0.38), 0 2px 8px rgba(0, 0, 0, 0.20);
-  --shadow-card:  0 2px 12px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.14);
+  /* ─── shadows — multi-layer depth with warm tint ─── */
+  --shadow-glass: 0 4px 24px rgba(0, 0, 0, 0.40), 0 1px 2px rgba(0, 0, 0, 0.25),
+                  0 0 0 1px rgba(255, 210, 170, 0.04);
+  --shadow-float: 0 10px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.30),
+                  0 0 0 1px rgba(207, 113, 85, 0.07);
+  --shadow-card:  0 2px 12px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.20),
+                  0 0 0 1px rgba(255, 210, 170, 0.05);
 }
 
 /* ============================================
@@ -149,8 +158,9 @@ body {
 .dark body {
   background-image:
     var(--grain-url),
-    radial-gradient(at 15% 15%, rgba(212, 117, 90, 0.05) 0px, transparent 55%),
-    radial-gradient(at 85% 85%, rgba(106, 148, 96, 0.03) 0px, transparent 50%);
+    radial-gradient(ellipse at 20% 10%, rgba(207, 113, 85, 0.07) 0px, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(94, 143, 84, 0.04) 0px, transparent 45%),
+    radial-gradient(ellipse at 60% 40%, rgba(82, 126, 160, 0.03) 0px, transparent 40%);
 }
 
 h1, h2, h3 {
@@ -223,6 +233,11 @@ code, pre, .font-mono {
   flex-direction: column;
 }
 
+/* Dark mode sidebar — stronger edge + subtle inner glow */
+.dark .sidebar {
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 215, 175, 0.06);
+}
+
 /* Topbar — seamless full width */
 .topbar {
   position: sticky;
@@ -278,6 +293,11 @@ code, pre, .font-mono {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card);
   padding: 20px 24px;
+  transition: box-shadow 200ms ease, border-color 200ms ease;
+}
+.card-no-hover:hover {
+  box-shadow: var(--shadow-card), 0 0 0 1px var(--border-subtle);
+  border-color: var(--border-subtle);
 }
 
 /* ============================================
@@ -445,9 +465,9 @@ code, pre, .font-mono {
 }
 .dark .skeleton {
   background: linear-gradient(90deg,
-    rgba(38, 28, 20, 0.80) 25%,
-    rgba(55, 40, 28, 0.90) 50%,
-    rgba(38, 28, 20, 0.80) 75%);
+    rgba(255, 210, 170, 0.05) 25%,
+    rgba(255, 210, 170, 0.10) 50%,
+    rgba(255, 210, 170, 0.05) 75%);
   background-size: 1200px 100%;
 }
 
@@ -555,15 +575,21 @@ code, pre, .font-mono {
   overflow: hidden;
 }
 .nav-item:hover  { background: var(--accent-light); color: var(--accent); }
-.nav-item.active { background: var(--accent-light); color: var(--accent); }
+.nav-item.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--accent);
+}
 .nav-item .nav-icon { flex-shrink: 0; width: 18px; height: 18px; }
 
 .nav-section-label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.07em;
   color: var(--text-muted);
+  opacity: 0.7;
   padding: 4px 10px;
   margin-top: 8px;
 }
