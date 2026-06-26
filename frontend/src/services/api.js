@@ -1,11 +1,13 @@
 import axios from 'axios';
 import useAuthStore from '@/stores/authStore';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
+
 /**
  * Axios instance with JWT auth interceptor and 401 redirect
  */
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -34,7 +36,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const oldRefreshToken = useAuthStore.getState().refreshToken;
-        const res = await axios.post('/api/auth/refresh', { refreshToken: oldRefreshToken });
+        const res = await axios.post(`${apiBaseUrl}/auth/refresh`, { refreshToken: oldRefreshToken });
         const { accessToken: newToken, refreshToken: newRefreshToken } = res.data.data;
         useAuthStore.getState().setToken(newToken, newRefreshToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;

@@ -17,6 +17,7 @@ langgraph-checkpoint-postgres
 chromadb
 langchain-chroma
 pypdf
+beautifulsoup4
 
 
 # WhatsApp
