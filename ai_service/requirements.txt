@@ -32,3 +32,4 @@ psycopg-pool
 python-multipart
 httpx
 requests
+cloudinary

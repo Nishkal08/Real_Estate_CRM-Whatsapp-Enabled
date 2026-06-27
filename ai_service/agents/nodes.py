@@ -169,11 +169,11 @@ def conversation_node(state: AgentState) -> dict:
     new_signals = list(state.get("intent_signals", []))
 
     signal_keywords = {
-        "asked_price": ["price", "cost", "rate", "budget", "how much", "kitna"],
-        "mentioned_timeline": ["when", "possession", "ready", "move in", "kab"],
-        "is_decision_maker": ["i will buy", "we will buy", "my decision", "i decide"],
-        "specific_project_interest": ["interested in", "tell me about", "this project", "this flat"],
-        "mentioned_budget": ["budget is", "can spend", "have budget", "afford"]
+        "asked_price":             ["price", "cost", "rate", "budget", "how much", "kitna", "pricing", "lakh", "crore"],
+        "mentioned_timeline":      ["when", "possession", "ready", "move in", "kab", "december", "january", "by end", "within", "months", "year"],
+        "is_decision_maker":       ["i will buy", "we will buy", "my decision", "i decide", "i'm the decision", "decision maker", "family is on board", "we decide", "final call"],
+        "specific_project_interest": ["interested in", "tell me about", "this project", "this flat", "reneev", "life in blue", "dear life", "eden", "levvel", "cornerstone", "forever young"],
+        "mentioned_budget":        ["budget is", "can spend", "have budget", "afford", "my budget", "budget flexible", "budget of", "between", "upto", "up to"]
     }
 
     for signal, keywords in signal_keywords.items():

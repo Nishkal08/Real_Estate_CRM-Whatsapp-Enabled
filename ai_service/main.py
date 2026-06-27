@@ -140,14 +140,33 @@ async def ingest_file_endpoint(
     with open(file_path, "wb") as f:
         f.write(content)
         
-    # Build dynamic file URL
+    # Build local fallback URL and detect file type
     file_url = f"{request.base_url}static/uploads/{clean_filename}"
     print(f"File uploaded to: {file_url}")
-    
-    # Check if the file is PDF or Image
     is_pdf = clean_filename.lower().endswith(".pdf")
     is_image = any(clean_filename.lower().endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".webp"])
-    
+
+    # Upload to Cloudinary CDN if configured
+    from utils.cloudinary_uploader import upload_file_to_cloudinary, is_cloudinary_configured
+    cdn_url = None
+    if is_cloudinary_configured():
+        try:
+            resource_type = "image" if is_image else "raw"
+            public_id = os.path.splitext(clean_filename)[0]
+            cdn_url = upload_file_to_cloudinary(
+                file_path=file_path,
+                public_id=public_id,
+                resource_type=resource_type,
+                folder="real-estate-assets"
+            )
+            print(f"[CDN] Uploaded to Cloudinary: {cdn_url}")
+        except Exception as cdn_err:
+            print(f"[CDN] Cloudinary upload failed (using local URL): {cdn_err}")
+
+    # Use CDN URL if available, fall back to local
+    asset_url = cdn_url or file_url
+
+
     result = {"collection_name": f"kb_{kb_id.replace('-', '_')}", "chunk_count": 0}
     
     try:
@@ -165,35 +184,24 @@ async def ingest_file_endpoint(
                 vectorstore = get_chroma_db(kb_id)
                 vectorstore.add_documents([Document(page_content=fallback_text, metadata={"source": source_label})])
                 result = {"collection_name": f"kb_{kb_id.replace('-', '_')}", "chunk_count": 1}
-            # If description is provided, insert an additional structured chunk
+            # Store structured brochure chunk with CDN URL
             if description and description.strip():
                 vectorstore = get_chroma_db(kb_id)
-                meta = {"source": file_url}
-                doc_text = f"Brochure: {file_url} | Description: {description.strip()}"
-                vectorstore.add_documents([Document(page_content=doc_text, metadata=meta)])
+                doc_text = f"Brochure: {asset_url} | Description: {description.strip()}"
+                vectorstore.add_documents([Document(page_content=doc_text, metadata={"source": asset_url, "cdn": bool(cdn_url)})])
                 result["chunk_count"] = result.get("chunk_count", 0) + 1
         elif is_image:
-            # For images, we only store the structured Image fact chunk
-            if description and description.strip():
-                vectorstore = get_chroma_db(kb_id)
-                meta = {"source": file_url}
-                doc_text = f"Image: {file_url} | Description: {description.strip()}"
-                vectorstore.add_documents([Document(page_content=doc_text, metadata=meta)])
-                result["chunk_count"] = 1
-            else:
-                # If no description is provided, just store a default one
-                vectorstore = get_chroma_db(kb_id)
-                meta = {"source": file_url}
-                doc_text = f"Image: {file_url} | Description: Project photo"
-                vectorstore.add_documents([Document(page_content=doc_text, metadata=meta)])
-                result["chunk_count"] = 1
+            vectorstore = get_chroma_db(kb_id)
+            desc_text = description.strip() if description and description.strip() else "Project photo"
+            doc_text = f"Image: {asset_url} | Description: {desc_text}"
+            vectorstore.add_documents([Document(page_content=doc_text, metadata={"source": asset_url, "cdn": bool(cdn_url)})])
+            result["chunk_count"] = 1
         else:
-            # For any other file types, ingest them as plain text if possible
             if clean_filename.lower().endswith(".txt"):
                 try:
                     text_content = content.decode("utf-8")
                     from kb.ingestion.chunker import chunk_text
-                    chunks = chunk_text(text_content, file_url)
+                    chunks = chunk_text(text_content, asset_url)
                     if chunks:
                         vectorstore = get_chroma_db(kb_id)
                         vectorstore.add_documents(chunks)
@@ -201,10 +209,10 @@ async def ingest_file_endpoint(
                 except Exception as e:
                     print(f"Txt ingest error: {e}")
                     
-        return {"success": True, **result}
+        return {"success": True, "cdn_url": cdn_url, **result}
     except Exception as e:
         print(f"File ingest error: {e}")
-        return {"success": True, "collection_name": f"kb_{kb_id.replace('-', '_')}", "chunk_count": 0}
+        return {"success": True, "cdn_url": cdn_url, "collection_name": f"kb_{kb_id.replace('-', '_')}", "chunk_count": 0}
 
 from schemas.kb import UrlEmbedRequest
 

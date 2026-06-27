@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     jwt_secret: str = Field("supersecret123", env="JWT_SECRET")
     sandbox_redirect_numbers: str = Field("", env="SANDBOX_REDIRECT_NUMBERS")
 
+    # Cloudinary CDN credentials
+    cloudinary_cloud_name: str | None = Field(None, env="CLOUDINARY_CLOUD_NAME")
+    cloudinary_api_key: str | None = Field(None, env="CLOUDINARY_KEY")
+    cloudinary_api_secret: str | None = Field(None, env="CLOUDINARY_SECRET_KEY")
+
     # URL of the Node backend — set to deployed URL in production
     backend_url: str = Field("http://localhost:5000", env="BACKEND_URL")
 

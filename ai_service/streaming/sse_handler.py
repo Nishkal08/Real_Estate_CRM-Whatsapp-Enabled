@@ -69,6 +69,10 @@ def build_input_state(payload: dict) -> dict:
     if not kb_id or kb_id == "null" or kb_id == "None":
         kb_id = "main-kb"
 
+    # Only pass fields that change per-message.
+    # qualification_score, intent_signals, stage, sentiment are intentionally
+    # OMITTED so LangGraph checkpointer restores them from the saved thread state.
+    # Passing them as 0/[] would reset the conversation progress every call.
     return {
         "lead_id":              payload.get("lead_id", ""),
         "lead_name":            payload.get("lead_name", ""),
@@ -84,13 +88,14 @@ def build_input_state(payload: dict) -> dict:
         "last_agent_message":   "",
         "images_to_send":       [],
         "brochure_url":         None,
-        "qualification_score":  0,
-        "intent_signals":       [],
-        "stage":                "opener",
-        "sentiment":            "neutral",
-        "confidence":           1.0,
-        "out_of_scope_count":   0,
         "human_handoff":        False,
         "handoff_reason":       "",
-        "task_complete":        False
+        "task_complete":        False,
+        # First-call defaults — checkpointer overrides these on resume
+        "qualification_score":  payload.get("qualification_score", 0),
+        "intent_signals":       payload.get("intent_signals", []),
+        "stage":                payload.get("stage", "opener"),
+        "sentiment":            payload.get("sentiment", "neutral"),
+        "confidence":           1.0,
+        "out_of_scope_count":   0,
     }
