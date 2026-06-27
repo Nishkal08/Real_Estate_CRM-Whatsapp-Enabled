@@ -2,6 +2,7 @@ import os
 from pypdf import PdfReader
 from langchain_chroma import Chroma
 from langchain_mistralai import MistralAIEmbeddings
+from langchain_core.documents import Document
 from kb.ingestion.chunker import chunk_text
 from config.settings import settings
 
