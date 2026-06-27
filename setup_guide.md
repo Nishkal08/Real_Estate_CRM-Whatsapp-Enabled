@@ -40,7 +40,7 @@ DATABASE_URL = "postgresql://user:password@host:port/database?pgbouncer=true&con
 
 # ─── DEVELOPMENT REDIRECTS ───
 # Redirects all outbound messages to these verified numbers when sandbox mode is active.
-SANDBOX_REDIRECT_NUMBERS = "+918000334811,+917041232198"
+SANDBOX_REDIRECT_NUMBERS = "YOUR_CONTACT_NUMBERS"
 
 # ─── JWT CRYPTO SECRETS ───
 JWT_SECRET = generate_secure_hex_string
