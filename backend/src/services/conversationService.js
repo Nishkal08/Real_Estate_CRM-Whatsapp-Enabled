@@ -121,7 +121,18 @@ async function sendHumanMessage(conversationId, businessId, content) {
   });
 
   // Send via Twilio
-  await twilioService.sendMessage(conversation.lead.phone, content);
+  const twilioResult = await twilioService.sendMessage(conversation.lead.phone, content);
+
+  if (twilioResult && twilioResult.sid) {
+    const updatedMessage = await prisma.message.update({
+      where: { id: message.id },
+      data: {
+        waMessageId: twilioResult.sid,
+        waStatus: twilioResult.status || 'sent',
+      },
+    });
+    return updatedMessage;
+  }
 
   return message;
 }

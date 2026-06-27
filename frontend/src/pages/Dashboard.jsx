@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Users, Megaphone, MessageSquare, Star,
   Flame, CheckCircle2, Zap, Bell, Activity,
-  ArrowRight
+  ArrowRight, AlertTriangle
 } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/PageWrapper';
 import { StatCard } from '@/components/analytics/StatCard';
@@ -50,6 +50,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [hotLeads, setHotLeads] = useState([]);
   const [activeCampaign, setActiveCampaign] = useState(null);
+  const [twilioLimitExceeded, setTwilioLimitExceeded] = useState(false);
 
   const handleActivityClick = (act) => {
     useActivityStore.getState().markRead(act.id);
@@ -62,11 +63,12 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [statsRes, leadsRes, campaignsRes, activitiesRes] = await Promise.all([
+        const [statsRes, leadsRes, campaignsRes, activitiesRes, twilioRes] = await Promise.all([
           api.get('/analytics/overview'),
           api.get('/leads?status=hot'),
           api.get('/campaigns'),
-          api.get('/analytics/activity')
+          api.get('/analytics/activity'),
+          api.get('/health/twilio').catch(() => ({ data: { success: false } }))
         ]);
         
         if (statsRes.data.success) setStats(statsRes.data.data);
@@ -77,6 +79,9 @@ export default function Dashboard() {
         }
         if (activitiesRes.data.success) {
           useActivityStore.getState().setActivities(activitiesRes.data.data);
+        }
+        if (twilioRes.data.success && twilioRes.data.dailyLimitExceeded) {
+          setTwilioLimitExceeded(true);
         }
       } catch (err) {
         console.error("Failed to fetch dashboard data", err);
@@ -120,6 +125,25 @@ export default function Dashboard() {
           </Button>
         </div>
       </div>
+
+      {twilioLimitExceeded && (
+        <div 
+          className="mb-6 px-4 py-3 rounded-xl flex items-center justify-between border transition-all duration-200"
+          style={{
+            background: 'var(--danger-bg)',
+            borderColor: 'rgba(200, 79, 79, 0.25)',
+            color: 'var(--danger)',
+            backdropFilter: 'var(--blur-sm)',
+          }}
+        >
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle size={15} className="flex-shrink-0 animate-pulse" />
+            <div className="text-xs font-medium">
+              <strong>Twilio Message Limit Reached:</strong> Your Twilio sandbox has hit its daily message limit (50 messages). Outbound replies to leads may fail to deliver.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bento Grid Layout — staggered entrance */}
       <motion.div

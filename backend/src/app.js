@@ -20,6 +20,9 @@ const whatsappWebhook    = require('./webhooks/whatsapp');
 
 const app = express();
 
+// Trust proxy header (X-Forwarded-For) in production (Render, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // ─── Global middleware ───────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
 

@@ -86,7 +86,7 @@ router.post('/incoming', async (req, res) => {
     });
 
     // Save agent reply
-    await prisma.message.create({
+    const agentMessage = await prisma.message.create({
       data: {
         conversationId: conversation.id,
         role:           'agent',
@@ -112,7 +112,16 @@ router.post('/incoming', async (req, res) => {
     });
 
     // Send reply via WhatsApp
-    await twilioService.sendMessage(phone, result.reply);
+    const twilioResult = await twilioService.sendMessage(phone, result.reply);
+    if (twilioResult && twilioResult.sid) {
+      await prisma.message.update({
+        where: { id: agentMessage.id },
+        data: {
+          waMessageId: twilioResult.sid,
+          waStatus: twilioResult.status || 'sent',
+        },
+      });
+    }
 
     // Send images if any (max 2, with small delay)
     if (result.images_to_send && result.images_to_send.length > 0) {
