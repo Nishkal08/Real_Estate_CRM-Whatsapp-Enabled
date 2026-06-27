@@ -152,6 +152,7 @@ async def ingest_file_endpoint(
     
     try:
         from kb.ingestion.pdf_ingestor import get_chroma_db
+        from kb.vector_store import get_vector_store
         from langchain_core.documents import Document
         
         if is_pdf:

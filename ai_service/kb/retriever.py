@@ -1,119 +1,91 @@
 from typing import Tuple, List
-import re
-from kb.ingestion.pdf_ingestor import get_chroma_db
-from langchain_mistralai import ChatMistralAI
+from kb.vector_store import get_vector_store
 from config.settings import settings
 
-def generate_query_variants(query: str) -> List[str]:
-    """Generate 3 semantic variations of the query for better semantic coverage."""
-    try:
-        llm = ChatMistralAI(
-            model="mistral-small-latest",
-            api_key=settings.mistral_api_key,
-            temperature=0.2,
-            max_tokens=150
-        )
-        prompt = (
-            "You are a helpful assistant that generates search query variations for real estate projects.\n"
-            "Given the user query below, generate exactly 3 variations of this query that capture different semantic "
-            "meanings, synonyms, or facets of the user's intent (such as pricing, location, configuration, images, brochures).\n"
-            "Respond ONLY with the 3 variations, one per line, without any numbering, bullet points, intro, or explanation.\n\n"
-            f"User Query: {query}"
-        )
-        response = llm.invoke(prompt)
-        variants = [line.strip() for line in response.content.split("\n") if line.strip()]
-        
-        # Filter out numbers/bullets if the model output them anyway
-        clean_variants = []
-        for v in variants[:3]:
-            # Strip leading numbers like "1. ", "2) ", "- "
-            v_clean = re.sub(r'^[\d\-\*\•\)\.\s]+', '', v).strip()
-            if v_clean:
-                clean_variants.append(v_clean)
-        return clean_variants
-    except Exception as e:
-        print(f"Error generating query variants: {e}")
+# Real-estate keyword synonyms for fast query expansion (no LLM call)
+_SYNONYM_MAP = {
+    "price": ["cost", "rate", "pricing", "how much", "budget", "amount"],
+    "location": ["area", "address", "where", "locality", "zone", "sector"],
+    "bhk": ["bedroom", "configuration", "flat", "apartment", "unit"],
+    "amenities": ["facilities", "features", "club", "gym", "pool", "parking"],
+    "possession": ["ready", "handover", "completion", "move in", "delivery"],
+    "rera": ["registration", "approved", "certified", "authority"],
+    "brochure": ["pdf", "catalog", "details", "floor plan", "layout"],
+}
+
+def _keyword_expand(query: str) -> List[str]:
+    """Generate 2 fast keyword-expanded query variants without any LLM call."""
+    q_lower = query.lower()
+    extra_terms = []
+    for key, synonyms in _SYNONYM_MAP.items():
+        if key in q_lower:
+            extra_terms.extend(synonyms[:2])
+        else:
+            for syn in synonyms:
+                if syn in q_lower:
+                    extra_terms.append(key)
+                    break
+
+    if not extra_terms:
         return []
 
+    # Variant 1: original + synonyms appended
+    v1 = f"{query} {' '.join(extra_terms[:3])}"
+    # Variant 2: query rephrased with first synonym swap
+    words = query.split()
+    v2_words = []
+    for w in words:
+        matched = False
+        for key, syns in _SYNONYM_MAP.items():
+            if w.lower() == key and syns:
+                v2_words.append(syns[0])
+                matched = True
+                break
+        if not matched:
+            v2_words.append(w)
+    v2 = " ".join(v2_words)
+    return [v1, v2] if v2 != query else [v1]
+
+
 def retrieve_context(query: str, kb_id: str) -> Tuple[str, List[str]]:
-    """Native LangChain MMR retrieval with query expansion."""
+    """MMR retrieval with fast keyword expansion. No extra LLM calls."""
     try:
         kb_id_clean = kb_id or "main-kb"
-        if kb_id_clean == "null" or kb_id_clean == "None":
+        if kb_id_clean in ("null", "None"):
             kb_id_clean = "main-kb"
-        vectorstore = get_chroma_db(kb_id_clean)
-        
-        # Generate variations for query expansion
-        variants = generate_query_variants(query)
+
+        vectorstore = get_vector_store(kb_id_clean)
+
+        # Fast keyword expansion — no LLM cost
+        variants = _keyword_expand(query)
         queries = [query] + variants
-        print(f"Expanding query: '{query}' -> {queries}")
-        
+        print(f"[Retriever] Queries: {queries}")
+
         retriever = vectorstore.as_retriever(
             search_type="mmr",
-            search_kwargs={"k": 4, "fetch_k": 15, "lambda_mult": 0.5}
+            search_kwargs={"k": 6, "fetch_k": 20, "lambda_mult": 0.6}
         )
-        
+
         all_docs = []
         for q in queries:
             docs = retriever.invoke(q)
             all_docs.extend(docs)
-            
-        # Deduplicate docs by page_content
-        seen_contents = set()
+
+        # Deduplicate by content
+        seen = set()
         unique_docs = []
         for doc in all_docs:
-            content_hash = doc.page_content.strip()
-            if content_hash not in seen_contents:
-                seen_contents.add(content_hash)
+            h = doc.page_content.strip()
+            if h not in seen:
+                seen.add(h)
                 unique_docs.append(doc)
-                
-        # Project filtering to prevent cross-contamination
-        projects = [
-            ("eden", ["eden"]),
-            ("dear life", ["dear life", "dear_life", "jagatpur"]),
-            ("page 22", ["page 22", "page_22", "page22"]),
-            ("levvel 7", ["levvel 7", "levvel_7", "levvel7"]),
-            ("forever young", ["forever young", "forever_young", "ognaj"]),
-            ("cornerstone", ["cornerstone", "codename cornerstone", "codename_cornerstone"]),
-            ("life in blue", ["life in blue", "life_in_blue"])
-        ]
-        
-        query_lower = query.lower()
-        active_projects = []
-        for proj_id, keywords in projects:
-            if any(kw in query_lower for kw in keywords):
-                active_projects.append(proj_id)
-                
-        filtered_docs = []
-        for doc in unique_docs:
-            content_lower = doc.page_content.lower()
-            source_lower = doc.metadata.get("source", "").lower() if doc.metadata else ""
-            
-            is_mismatched = False
-            for proj_id, keywords in projects:
-                if proj_id not in active_projects:
-                    if any(kw in content_lower or kw in source_lower for kw in keywords):
-                        is_mismatched = True
-                        break
-                        
-            if active_projects and is_mismatched:
-                has_active_kw = False
-                for proj_id in active_projects:
-                    proj_kws = next(kws for pid, kws in projects if pid == proj_id)
-                    if any(kw in content_lower or kw in source_lower for kw in proj_kws):
-                        has_active_kw = True
-                        break
-                if not has_active_kw:
-                    continue
-                    
-            filtered_docs.append(doc)
-            
-        # Limit to top 6 unique documents
-        unique_docs = filtered_docs[:6]
-        
-        context_str = "\n\n".join([doc.page_content for doc in unique_docs])
+
+        # Top 8 unique results
+        unique_docs = unique_docs[:8]
+
+        context_str = "\n\n---\n\n".join([doc.page_content for doc in unique_docs])
         sources = list(set([doc.metadata.get("source", "Unknown") for doc in unique_docs]))
         return context_str, sources
     except Exception as e:
-        print(f"Retrieval error: {e}")
+        print(f"[Retriever] Error: {e}")
         return "", []

@@ -14,50 +14,20 @@ llm_primary = ChatMistralAI(
     model="mistral-small-latest",
     api_key=settings.mistral_api_key,
     temperature=0.0,
-    max_tokens=500
+    max_tokens=900
 )
 
 llm_fallback = ChatMistralAI(
     model="mistral-medium-3-5",
     api_key=settings.mistral_api_key,
     temperature=0.0,
-    max_tokens=500
+    max_tokens=900
 )
 
 # Bind tools
 llm_primary_with_tools = llm_primary.bind_tools(TOOLS)
 llm_fallback_with_tools = llm_fallback.bind_tools(TOOLS)
 
-def check_relevance(text: str, caption: str, url: str) -> bool:
-    text_lower = text.lower()
-    caption_lower = caption.lower() if caption else ""
-    url_lower = url.lower() if url else ""
-    
-    # Extract project identifiers
-    projects = [
-        ("eden", ["eden"]),
-        ("dear life", ["dear life", "dear_life", "jagatpur"]),
-        ("page 22", ["page 22", "page_22", "page22"]),
-        ("levvel 7", ["levvel 7", "levvel_7", "levvel7"]),
-        ("forever young", ["forever young", "forever_young", "ognaj"]),
-        ("cornerstone", ["cornerstone", "codename cornerstone", "codename_cornerstone"]),
-        ("life in blue", ["life in blue", "life_in_blue"])
-    ]
-    
-    # Check if the asset itself belongs to a specific project
-    asset_project = None
-    for proj_id, keywords in projects:
-        if any(kw in caption_lower or kw in url_lower for kw in keywords):
-            asset_project = proj_id
-            break
-            
-    # If the asset is identified as belonging to a project,
-    # it is ONLY relevant if that project is mentioned in the text
-    if asset_project:
-        proj_kws = next(kws for proj_id, kws in projects if proj_id == asset_project)
-        return any(kw in text_lower for kw in proj_kws)
-        
-    return True
 
 def conversation_node(state: AgentState) -> dict:
     # Prepare conversation window (last 8 messages + cached summary)
@@ -94,10 +64,14 @@ def conversation_node(state: AgentState) -> dict:
     images_found = []
     brochure_found = None
     final_reply = ""
+    loop_start = time.time()
 
-    # ReAct-style internal loop (max 5 cycles)
+    # ReAct-style internal loop (max 5 cycles, 25s wall-clock limit)
     current_messages = list(lc_messages)
     for cycle in range(5):
+        if time.time() - loop_start > 25:
+            print("[Agent] ReAct loop timeout — using partial response")
+            break
         response = None
         for attempt in range(max_retries):
             try:
@@ -217,22 +191,10 @@ def conversation_node(state: AgentState) -> dict:
     user_msg = state["messages"][-1]["content"] if state["messages"] else ""
     context_text = f"{user_msg} {final_reply}"
     
-    filtered_images = []
-    for img in images_found:
-        url = img.get("url") if isinstance(img, dict) else img
-        caption = img.get("caption") if isinstance(img, dict) else ""
-        if check_relevance(context_text, caption, url):
-            filtered_images.append(img)
-            
-    filtered_brochure = brochure_found
-    if brochure_found:
-        if not check_relevance(context_text, "brochure", brochure_found):
-            filtered_brochure = None
-            
     formatted_reply = format_for_whatsapp(
         reply=final_reply,
-        brochure_url=filtered_brochure,
-        has_images=len(filtered_images) > 0
+        brochure_url=brochure_found,
+        has_images=len(images_found) > 0
     )
 
     return {
@@ -242,8 +204,8 @@ def conversation_node(state: AgentState) -> dict:
         "intent_signals": new_signals,
         "stage": determine_stage(score, state.get("stage", "opener")),
         "human_handoff": False,
-        "images_to_send": filtered_images,
-        "brochure_url": filtered_brochure,
+        "images_to_send": images_found,
+        "brochure_url": brochure_found,
         "task_complete": False
     }
 

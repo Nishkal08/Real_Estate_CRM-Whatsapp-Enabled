@@ -13,9 +13,11 @@ langchain-openai
 langgraph
 langgraph-checkpoint-postgres
 
-# Vector DB & PDF
+# Vector DB & Embeddings
 chromadb
 langchain-chroma
+langchain-postgres
+pgvector
 pypdf
 beautifulsoup4
 
