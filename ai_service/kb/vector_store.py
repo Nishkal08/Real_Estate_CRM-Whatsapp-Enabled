@@ -16,7 +16,12 @@ _engine = None
 def get_engine():
     global _engine
     if _engine is None:
-        conn_str = settings.database_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        import re
+        db_url = re.sub(r'[?&]pgbouncer=[^&]*', '', settings.database_url)
+        db_url = re.sub(r'[?&]connection_limit=[^&]*', '', db_url)
+        if '?' not in db_url and '&' in db_url:
+            db_url = db_url.replace('&', '?', 1)
+        conn_str = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
         conn_str = conn_str.replace("postgres://", "postgresql+psycopg2://", 1)
         # Configure connection pooling to reuse connections and limit max active connections to 2
         _engine = create_engine(

@@ -18,7 +18,11 @@ def get_checkpointer():
     if _checkpointer is not None:
         return _checkpointer
 
-    db_url = settings.database_url
+    import re
+    db_url = re.sub(r'[?&]pgbouncer=[^&]*', '', settings.database_url)
+    db_url = re.sub(r'[?&]connection_limit=[^&]*', '', db_url)
+    if '?' not in db_url and '&' in db_url:
+        db_url = db_url.replace('&', '?', 1)
 
     # ── Attempt 1: connection pool (best for long-running services) ──────────
     try:
@@ -32,7 +36,7 @@ def get_checkpointer():
             min_size=1,
             max_size=2,
             open=True,
-            kwargs={"autocommit": True},
+            kwargs={"autocommit": True, "prepare_threshold": None},
         )
         _checkpointer = PostgresSaver(pool)
         _checkpointer.setup()
@@ -48,7 +52,7 @@ def get_checkpointer():
         import psycopg
         from langgraph.checkpoint.postgres import PostgresSaver
 
-        conn = psycopg.connect(db_url, connect_timeout=10, autocommit=True)
+        conn = psycopg.connect(db_url, connect_timeout=10, autocommit=True, prepare_threshold=None)
         _checkpointer = PostgresSaver(conn)
         _checkpointer.setup()
         print("[Checkpointer] Using PostgresSaver with plain psycopg connection.")
