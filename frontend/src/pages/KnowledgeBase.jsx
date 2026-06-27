@@ -9,10 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { formatFileSize, formatDate } from '@/utils/formatters';
 import { toast } from '@/stores/uiStore';
 import { cn } from '@/utils/cn';
-import axios from 'axios';
-
-const aiServiceUrl = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:8000';
-const aiClient = axios.create({ baseURL: `${aiServiceUrl}/kb`, timeout: 120000 });
+import api from '@/services/api';
 
 const DOC_ICONS = {
   pdf:  'PDF',
@@ -152,9 +149,17 @@ export default function KnowledgeBase() {
   const fetchDocs = async (currentKbId) => {
     try {
       setLoading(true);
-      const res = await aiClient.get(`/${currentKbId}/documents`);
+      const res = await api.get(`/kb/${currentKbId}/documents`);
       if (res.data.success) {
-        setDocs(res.data.data || []);
+        const mapped = (res.data.data || []).map(doc => ({
+          id:         doc.id,
+          name:       doc.fileName,
+          type:       doc.sourceType,
+          chunks:     doc.chunkCount || 0,
+          size:       0,
+          uploadedAt: doc.embeddedAt,
+        }));
+        setDocs(mapped);
       }
     } catch (err) {
       console.error("Failed to load documents", err);
@@ -166,12 +171,12 @@ export default function KnowledgeBase() {
   useEffect(() => {
     const initKB = async () => {
       try {
-        let kbsRes = await aiClient.get('/');
+        let kbsRes = await api.get('/kb');
         let kbs = kbsRes.data.success ? kbsRes.data.data : [];
         let mainKb = kbs[0];
         
         if (!mainKb) {
-          const createRes = await aiClient.post('/create', { name: 'Main Knowledge Base' });
+          const createRes = await api.post('/kb/create', { name: 'Main Knowledge Base' });
           if (createRes.data.success) mainKb = createRes.data.data;
         }
 
@@ -199,7 +204,7 @@ export default function KnowledgeBase() {
     if (!urlInput.trim()) return;
     setAddingUrl(true);
     try {
-      const res = await aiClient.post(`/ingest/url`, { url: urlInput, kb_id: kbId });
+      const res = await api.post(`/kb/${kbId}/url`, { url: urlInput });
       if (res.data.success) {
         toast.success('URL scraped and embedded!');
         fetchDocs(kbId);
@@ -215,7 +220,7 @@ export default function KnowledgeBase() {
   const handleDelete = async (id) => {
     try {
       if (kbId) {
-        const res = await aiClient.delete(`/${kbId}/document`, { params: { source: id } });
+        const res = await api.delete(`/kb/${kbId}/document/${id}`);
         if (res.data.success) {
           toast.success('Document removed from knowledge base');
           fetchDocs(kbId);
@@ -419,7 +424,7 @@ export default function KnowledgeBase() {
                   formData.append('file', file);
                   formData.append('kb_id', kbId);
                   formData.append('description', desc);
-                  const res = await aiClient.post(`/ingest/pdf`, formData, {
+                  const res = await api.post(`/kb/${kbId}/upload`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                   });
                   if (res.data.success) {

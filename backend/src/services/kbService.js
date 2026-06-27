@@ -29,7 +29,7 @@ async function listKBs(businessId) {
 /**
  * Upload a document to KB — saves metadata + calls AI service for embedding
  */
-async function uploadDocument(kbId, businessId, file) {
+async function uploadDocument(kbId, businessId, file, description = '') {
   const kb = await prisma.knowledgeBase.findFirst({ where: { id: kbId, businessId } });
   if (!kb) throw ApiError.notFound('Knowledge base not found');
 
@@ -39,14 +39,53 @@ async function uploadDocument(kbId, businessId, file) {
       kbId,
       fileName:   file.originalname,
       sourceType: getSourceType(file.originalname),
-      fileUrl:    null, // Will be set after Cloudinary upload if configured
+      fileUrl:    null,
     },
   });
 
   // Call AI service to embed (async, don't block)
-  embedDocument(kbId, doc.id, file.buffer, file.originalname).catch(err => {
+  embedDocument(kbId, doc.id, file.buffer, file.originalname, description).catch(err => {
     console.error(`[KB] Failed to embed ${doc.id}:`, err.message);
   });
+
+  return doc;
+}
+
+/**
+ * Ingest a URL into KB
+ */
+async function ingestURL(kbId, businessId, url) {
+  const kb = await prisma.knowledgeBase.findFirst({ where: { id: kbId, businessId } });
+  if (!kb) throw ApiError.notFound('Knowledge base not found');
+
+  // Save document metadata
+  const doc = await prisma.kbDocument.create({
+    data: {
+      kbId,
+      fileName:   url,
+      sourceType: 'url',
+      fileUrl:    url,
+    },
+  });
+
+  // Call AI service to embed
+  try {
+    const res = await fetch(`${AI_SERVICE_URL}/kb/ingest/url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kb_id: kbId, url }),
+      signal: AbortSignal.timeout(60000),
+    });
+    if (res.ok) {
+      const result = await res.json();
+      await prisma.kbDocument.update({
+        where: { id: doc.id },
+        data: { chunkCount: result.chunk_count || 0, embeddedAt: new Date() },
+      });
+    }
+  } catch (err) {
+    console.warn('[KB] URL embedding failed:', err.message);
+  }
 
   return doc;
 }
@@ -76,10 +115,9 @@ async function deleteDocument(kbId, docId, businessId) {
 
   // Call AI service to remove from vector store
   try {
-    await fetch(`${AI_SERVICE_URL}/kb/delete-doc`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kb_id: kbId, doc_id: docId }),
+    const source = doc.sourceType === 'url' ? doc.fileUrl : doc.fileName;
+    await fetch(`${AI_SERVICE_URL}/kb/${kbId}/document?source=${encodeURIComponent(source)}`, {
+      method: 'DELETE',
       signal: AbortSignal.timeout(10000),
     });
   } catch (err) {
@@ -92,14 +130,17 @@ async function deleteDocument(kbId, docId, businessId) {
 
 // ── Helpers ─────────────────────────────────────────────
 
-async function embedDocument(kbId, docId, buffer, fileName) {
+async function embedDocument(kbId, docId, buffer, fileName, description = '') {
   try {
     const formData = new FormData();
     formData.append('file', new Blob([buffer]), fileName);
     formData.append('kb_id', kbId);
-    formData.append('doc_id', docId);
+    formData.append('source_label', fileName);
+    if (description) {
+      formData.append('description', description);
+    }
 
-    const res = await fetch(`${AI_SERVICE_URL}/kb/embed`, {
+    const res = await fetch(`${AI_SERVICE_URL}/kb/ingest/pdf`, {
       method: 'POST',
       body: formData,
       signal: AbortSignal.timeout(120000),
@@ -125,4 +166,5 @@ function getSourceType(fileName) {
   return 'other';
 }
 
-module.exports = { createKB, listKBs, uploadDocument, getDocuments, deleteDocument };
+module.exports = { createKB, listKBs, uploadDocument, ingestURL, getDocuments, deleteDocument };
+

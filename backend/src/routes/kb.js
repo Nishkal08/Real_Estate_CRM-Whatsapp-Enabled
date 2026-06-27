@@ -19,7 +19,16 @@ router.post('/create', auth, validate(['name']), async (req, res, next) => {
 router.post('/:id/upload', auth, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'No file uploaded' });
-    const doc = await kbService.uploadDocument(req.params.id, req.user.businessId, req.file);
+    const description = req.body.description || '';
+    const doc = await kbService.uploadDocument(req.params.id, req.user.businessId, req.file, description);
+    res.json({ success: true, data: doc });
+  } catch (err) { next(err); }
+});
+
+// POST /api/kb/:id/url — URL scrape & embed
+router.post('/:id/url', auth, validate(['url']), async (req, res, next) => {
+  try {
+    const doc = await kbService.ingestURL(req.params.id, req.user.businessId, req.body.url);
     res.json({ success: true, data: doc });
   } catch (err) { next(err); }
 });
