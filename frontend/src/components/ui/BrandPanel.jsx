@@ -1,77 +1,100 @@
 import { Zap } from 'lucide-react';
 
 export function BrandPanel({
+  bgColor,
   headline,
   subtitle,
   accentColor = '#D85A30',
-  iconBg = 'rgba(216, 90, 48, 0.1)',
   stats = []
 }) {
   const hasStats = stats && stats.length > 0;
 
   return (
     <div
-      className="relative flex flex-col justify-between p-10 overflow-hidden select-none w-full md:w-[40%] min-h-[220px] md:min-h-screen text-white transition-colors duration-300"
-      style={{ background: 'var(--page-secondary)' }}
+      className="relative flex flex-col overflow-hidden select-none"
+      style={{
+        background: bgColor,
+        width: '40%',
+        minHeight: '100vh',
+        padding: '40px 44px',
+        flexShrink: 0,
+      }}
     >
-      {/* Drift Background Orbs */}
+      {/* CSS Keyframes injected once */}
       <style>{`
-        @keyframes drift1 {
-          0% { transform: translate(0px, 0px) scale(1); }
-          50% { transform: translate(15px, -15px) scale(1.05); }
-          100% { transform: translate(0px, 0px) scale(1); }
+        @keyframes aurionDrift1 {
+          0%   { transform: translate(0px, 0px); }
+          50%  { transform: translate(14px, -14px); }
+          100% { transform: translate(0px, 0px); }
         }
-        @keyframes drift2 {
-          0% { transform: translate(0px, 0px) scale(1.05); }
-          50% { transform: translate(-15px, 15px) scale(0.95); }
-          100% { transform: translate(0px, 0px) scale(1.05); }
+        @keyframes aurionDrift2 {
+          0%   { transform: translate(0px, 0px); }
+          50%  { transform: translate(-12px, 18px); }
+          100% { transform: translate(0px, 0px); }
         }
-        .orb-1 {
-          animation: drift1 18s ease-in-out infinite;
-        }
-        .orb-2 {
-          animation: drift2 22s ease-in-out infinite;
+        @keyframes aurionDrift3 {
+          0%   { transform: translate(0px, 0px); }
+          50%  { transform: translate(16px, 10px); }
+          100% { transform: translate(0px, 0px); }
         }
       `}</style>
 
-      {/* SVG Background Orbs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <circle
-            cx="20%"
-            cy="30%"
-            r="160"
-            fill={accentColor}
-            opacity="0.12"
-            className="orb-1"
-            style={{ filter: 'blur(75px)' }}
-          />
-          <circle
-            cx="80%"
-            cy="80%"
-            r="180"
-            fill={accentColor}
-            opacity="0.10"
-            className="orb-2"
-            style={{ filter: 'blur(80px)' }}
-          />
-        </svg>
-      </div>
+      {/* Decorative drifting orbs */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '-60px', left: '-80px',
+          width: 320, height: 320,
+          borderRadius: '50%',
+          background: accentColor,
+          opacity: 0.18,
+          filter: 'blur(90px)',
+          animation: 'aurionDrift1 20s ease-in-out infinite',
+        }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          bottom: '5%', right: '-60px',
+          width: 280, height: 280,
+          borderRadius: '50%',
+          background: accentColor,
+          opacity: 0.14,
+          filter: 'blur(80px)',
+          animation: 'aurionDrift2 26s ease-in-out infinite',
+        }}
+      />
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: '42%', left: '30%',
+          width: 200, height: 200,
+          borderRadius: '50%',
+          background: accentColor,
+          opacity: 0.10,
+          filter: 'blur(70px)',
+          animation: 'aurionDrift3 16s ease-in-out infinite',
+        }}
+      />
 
-      {/* Logo Section */}
-      <div className="relative z-10 flex items-center gap-2.5">
+      {/* Logo */}
+      <div className="relative z-10 flex items-center gap-2.5 mb-auto">
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: accentColor, boxShadow: `0 2px 10px ${accentColor}4D` }}
+          className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+          style={{
+            background: accentColor,
+            boxShadow: `0 4px 14px ${accentColor}55`,
+          }}
         >
-          <Zap size={15} color="#fff" strokeWidth={2.5} />
+          <Zap size={16} color="#fff" strokeWidth={2.5} />
         </div>
         <span
           style={{
             fontWeight: 800,
             fontSize: 18,
-            letterSpacing: '-0.02em',
-            fontFamily: 'var(--font-body)',
+            letterSpacing: '-0.03em',
+            color: '#ffffff',
+            fontFamily: 'inherit',
           }}
         >
           Aurion
@@ -79,28 +102,70 @@ export function BrandPanel({
       </div>
 
       {/* Center Copy */}
-      <div className="relative z-10 my-auto max-w-[320px]">
-        <h1 className="text-xl md:text-3xl font-extrabold tracking-tight leading-tight" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="relative z-10 flex-1 flex flex-col justify-center py-16">
+        <h1
+          style={{
+            fontWeight: 800,
+            fontSize: 'clamp(26px, 3.5vw, 38px)',
+            color: '#ffffff',
+            lineHeight: 1.18,
+            letterSpacing: '-0.02em',
+            fontFamily: 'inherit',
+            marginBottom: 16,
+          }}
+        >
           {headline}
         </h1>
-        <p className="text-xs md:text-sm mt-3 opacity-80 leading-relaxed font-medium" style={{ color: '#F0EBE6' }}>
+        <p
+          style={{
+            fontSize: 14,
+            color: 'rgba(255,255,255,0.65)',
+            lineHeight: 1.7,
+            fontWeight: 400,
+            maxWidth: 300,
+          }}
+        >
           {subtitle}
         </p>
       </div>
 
-      {/* Footer Stats Row (Omitted if empty) */}
-      {hasStats ? (
-        <div className="relative z-10 grid grid-cols-2 gap-4 pt-6 border-t border-white/10 mt-6">
+      {/* Footer Stats */}
+      {hasStats && (
+        <div
+          className="relative z-10"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 20,
+            paddingTop: 24,
+            borderTop: '1px solid rgba(255,255,255,0.12)',
+          }}
+        >
           {stats.map((stat, i) => (
             <div key={i}>
-              <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
-              <div className="text-[10px] uppercase font-bold tracking-wider opacity-60 mt-1">{stat.label}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
+                {stat.value}
+              </div>
+              <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.5)', marginTop: 4, fontWeight: 600 }}>
+                {stat.label}
+              </div>
             </div>
           ))}
         </div>
-      ) : (
-        <div className="relative z-10 text-[10px] font-semibold opacity-40 uppercase tracking-widest mt-6">
-          Intelligence Platform
+      )}
+
+      {!hasStats && (
+        <div
+          className="relative z-10"
+          style={{
+            fontSize: 10,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            color: 'rgba(255,255,255,0.3)',
+            fontWeight: 700,
+          }}
+        >
+          Intelligence Platform · Aurion CRM
         </div>
       )}
     </div>

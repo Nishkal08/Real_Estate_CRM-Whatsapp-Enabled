@@ -7,53 +7,68 @@ export function FloatingLabelInput({
   icon: Icon,
   value = '',
   onChange,
-  accentColor = '#C4654A', // Default brand accent
+  accentColor = '#C4654A',
   isValid = false,
   showSuccessCheckmark = false,
   error = '',
+  required,
   ...props
 }) {
   const [focused, setFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const id = useId();
 
-  const isFilled = value && String(value).length > 0;
-  const isFloating = focused || isFilled;
+  const isFilled = value !== undefined && value !== null && String(value).length > 0;
+  const isFloated = focused || isFilled;
   const isPassword = type === 'password';
   const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
 
+  const hasRightSlot = isPassword || (showSuccessCheckmark && isValid);
+  const leftPad = Icon ? 42 : 16;
+  const rightPad = hasRightSlot ? 42 : 16;
+
   return (
     <div className="w-full">
-      <div className="relative flex items-center" style={{ minHeight: 52 }}>
+      <div className="relative" style={{ height: 58 }}>
         {/* Left Icon */}
         {Icon && (
           <div
-            className="absolute left-3.5 flex items-center justify-center pointer-events-none"
-            style={{ color: focused ? accentColor : 'var(--text-disabled)' }}
+            className="absolute flex items-center justify-center pointer-events-none"
+            style={{
+              left: 14,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: focused ? accentColor : 'rgba(0,0,0,0.3)',
+              zIndex: 2,
+              transition: 'color 0.2s',
+            }}
           >
             <Icon size={16} strokeWidth={2} />
           </div>
         )}
 
-        {/* The floating label */}
+        {/* Floating Label */}
         <label
           htmlFor={id}
-          className="absolute pointer-events-none transition-all duration-200 select-none"
+          className="absolute pointer-events-none select-none"
           style={{
-            left: Icon ? '40px' : '16px',
-            top: isFloating ? '7px' : '50%',
-            transform: isFloating ? 'none' : 'translateY(-50%)',
-            fontSize: isFloating ? '10px' : '13px',
-            fontWeight: isFloating ? 600 : 400,
-            color: isFloating ? accentColor : 'var(--text-disabled)',
-            letterSpacing: isFloating ? '0.04em' : 'normal',
-            textTransform: isFloating ? 'uppercase' : 'none',
+            left: leftPad,
+            top: isFloated ? 9 : '50%',
+            transform: isFloated ? 'none' : 'translateY(-50%)',
+            fontSize: isFloated ? 9.5 : 14,
+            fontWeight: isFloated ? 700 : 400,
+            color: isFloated ? accentColor : 'rgba(0,0,0,0.38)',
+            letterSpacing: isFloated ? '0.05em' : 0,
+            textTransform: isFloated ? 'uppercase' : 'none',
+            transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+            zIndex: 2,
+            whiteSpace: 'nowrap',
           }}
         >
           {label}
         </label>
 
-        {/* Input Field */}
+        {/* Input */}
         <input
           id={id}
           type={inputType}
@@ -61,41 +76,84 @@ export function FloatingLabelInput({
           onChange={onChange}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className="w-full h-[52px] rounded-xl text-sm font-medium transition-all"
+          required={required}
+          aria-label={label}
+          className="absolute inset-0 w-full h-full rounded-xl text-sm font-medium"
           style={{
-            paddingLeft: Icon ? '40px' : '16px',
-            paddingRight: isPassword || showSuccessCheckmark ? '40px' : '16px',
-            paddingTop: isFloating ? '16px' : '0px',
-            background: 'var(--bg-elevated)',
-            border: `1.5px solid ${focused ? accentColor : 'var(--border-subtle)'}`,
-            color: 'var(--text-primary)',
+            paddingLeft: leftPad,
+            paddingRight: rightPad,
+            paddingTop: isFloated ? 22 : 0,
+            paddingBottom: 0,
+            background: '#ffffff',
+            border: `1.5px solid ${focused ? accentColor : 'rgba(0,0,0,0.14)'}`,
+            color: '#111111',
             outline: 'none',
-            boxShadow: focused ? `0 0 0 3px ${accentColor}1C` : 'none',
+            boxShadow: focused ? `0 0 0 3px ${accentColor}22` : 'none',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+            caretColor: accentColor,
           }}
+          // Hide placeholder until floated to avoid conflict with label
+          placeholder={isFloated ? '' : ''}
           {...props}
         />
 
-        {/* Right Action Slot */}
-        <div className="absolute right-3.5 flex items-center justify-center">
-          {isPassword ? (
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="p-1 rounded hover:bg-black/5 text-[var(--text-secondary)] transition-colors focus:outline-none"
-            >
-              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-            </button>
-          ) : showSuccessCheckmark && isValid ? (
-            <div className="text-[var(--success)] flex items-center justify-center p-0.5 rounded-full bg-[rgba(16,185,129,0.1)]">
-              <Check size={14} strokeWidth={3} />
-            </div>
-          ) : null}
-        </div>
+        {/* Right Slot: eye toggle or checkmark */}
+        {hasRightSlot && (
+          <div
+            className="absolute flex items-center justify-center"
+            style={{
+              right: 12,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 3,
+            }}
+          >
+            {isPassword ? (
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 4,
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  color: 'rgba(0,0,0,0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            ) : (
+              showSuccessCheckmark && isValid && (
+                <div
+                  style={{
+                    background: 'rgba(16, 185, 129, 0.12)',
+                    borderRadius: '50%',
+                    padding: 3,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#10B981',
+                  }}
+                >
+                  <Check size={13} strokeWidth={3} />
+                </div>
+              )
+            )}
+          </div>
+        )}
       </div>
+
       {error && (
-        <p className="text-xs text-[var(--danger)] mt-1.5 pl-1.5 font-medium flex items-center gap-1">
-          ⚠️ {error}
+        <p
+          className="text-xs font-medium mt-1.5 pl-1"
+          style={{ color: '#EF4444' }}
+        >
+          {error}
         </p>
       )}
     </div>

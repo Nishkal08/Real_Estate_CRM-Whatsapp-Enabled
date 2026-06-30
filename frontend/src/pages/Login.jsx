@@ -88,28 +88,27 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[var(--page-primary)]">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row', background: '#1A140E' }}>
       {/* Brand left panel (40% width) */}
       <BrandPanel
+        bgColor="#1A140E"
         headline="Your AI sales team never sleeps"
         subtitle="WhatsApp-first lead qualification for your business, running 24/7."
-        accentColor="#D85A30" // Terracotta Orange
-        iconBg="rgba(216, 90, 48, 0.15)"
+        accentColor="#D85A30"
         stats={liveStats || []}
       />
 
       {/* Form right panel (60% width) */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 lg:p-20 bg-[var(--page-primary)]">
-        <div className="w-full max-w-[420px] py-8">
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 44px', background: '#ffffff' }}>
+        <div style={{ width: '100%', maxWidth: 420 }}>
           {/* Form Header */}
-          <div className="mb-8">
+          <div style={{ marginBottom: 32 }}>
             <h2
-              className="text-2xl font-extrabold tracking-tight"
-              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}
+              style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', color: '#111111', lineHeight: 1.2, marginBottom: 6, fontFamily: 'inherit' }}
             >
               Welcome back
             </h2>
-            <p className="text-xs mt-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: 13, color: '#777777', fontWeight: 400 }}>
               Sign in to your AI operations dashboard
             </p>
           </div>
@@ -158,16 +157,12 @@ export default function Login() {
           </form>
 
           {/* Divider */}
-          <div className="relative my-6 flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--border-subtle)]" />
-            </div>
-            <span
-              className="relative px-3 text-[10px] font-bold uppercase tracking-wider bg-[var(--page-primary)]"
-              style={{ color: 'var(--text-disabled)' }}
-            >
+          <div style={{ position: 'relative', margin: '24px 0', display: 'flex', alignItems: 'center' }}>
+            <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
+            <span style={{ padding: '0 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(0,0,0,0.3)', background: '#ffffff' }}>
               or
             </span>
+            <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.1)' }} />
           </div>
 
           {/* Try Instant Demo Action */}
@@ -183,12 +178,11 @@ export default function Login() {
           </Button>
 
           {/* Footer Link */}
-          <p className="text-xs text-center mt-8 font-medium" style={{ color: 'var(--text-disabled)' }}>
+          <p style={{ fontSize: 12, textAlign: 'center', marginTop: 28, color: 'rgba(0,0,0,0.4)', fontWeight: 500 }}>
             New to Aurion?{' '}
             <Link
               to="/signup"
-              className="font-bold hover:underline transition-all ml-1"
-              style={{ color: 'var(--accent)' }}
+              style={{ color: '#D85A30', fontWeight: 700, textDecoration: 'none' }}
             >
               Create account
             </Link>

@@ -99,29 +99,31 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[var(--page-primary)]">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row', background: '#0E1F18' }}>
       {/* Brand left panel (40% width) */}
       <BrandPanel
+        bgColor="#0E1F18"
         headline="Set up your AI sales workspace"
         subtitle="Takes about 2 minutes. No credit card needed to start."
-        accentColor="#5DCAA5" // Teal Accent
-        iconBg="rgba(93, 202, 165, 0.15)"
+        accentColor="#5DCAA5"
         stats={[]}
       />
 
       {/* Form right panel (60% width) */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 lg:p-20 bg-[var(--page-primary)]">
-        <div className="w-full max-w-[420px] py-8">
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 44px', background: '#ffffff' }}>
+        <div style={{ width: '100%', maxWidth: 420 }}>
           {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-disabled)' }}>
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(0,0,0,0.35)', marginBottom: 10 }}>
               <span>Step {step} of 3</span>
               <span>{step === 1 ? 'Personal Info' : step === 2 ? 'Company Details' : 'Verify & Launch'}</span>
             </div>
-            <div className="h-1.5 w-full bg-[var(--border-subtle)] rounded-full flex overflow-hidden">
+            <div style={{ height: 5, width: '100%', background: 'rgba(0,0,0,0.08)', borderRadius: 99, overflow: 'hidden' }}>
               <div
-                className="h-full rounded-full transition-all duration-300"
                 style={{
+                  height: '100%',
+                  borderRadius: 99,
+                  transition: 'width 0.35s ease',
                   width: step === 1 ? '33.33%' : step === 2 ? '66.66%' : '100%',
                   background: '#5DCAA5'
                 }}
@@ -130,14 +132,13 @@ export default function Register() {
           </div>
 
           {/* Form Header */}
-          <div className="mb-8">
+          <div style={{ marginBottom: 32 }}>
             <h2
-              className="text-2xl font-extrabold tracking-tight"
-              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}
+              style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', color: '#111111', lineHeight: 1.2, marginBottom: 6, fontFamily: 'inherit' }}
             >
               {step === 1 ? 'Create your account' : step === 2 ? 'Tell us about your business' : 'Ready to start?'}
             </h2>
-            <p className="text-xs mt-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: 13, color: '#777777', fontWeight: 400 }}>
               {step === 1
                 ? 'Get your AI sales assistant running in minutes'
                 : step === 2
@@ -243,7 +244,7 @@ export default function Register() {
 
             {/* Step 3: Confirmation Summary */}
             {step === 3 && (
-              <div className="space-y-4 animate-fade-in p-5 rounded-2xl border" style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-glass-strong)' }}>
+              <div className="space-y-4 animate-fade-in p-5 rounded-2xl border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: 'rgba(0,0,0,0.03)' }}>
                 <div className="flex items-center gap-3 mb-2 pb-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
                   <CheckCircle2 className="text-[var(--success)]" size={18} />
                   <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Review Settings</span>
@@ -312,12 +313,11 @@ export default function Register() {
           </form>
 
           {/* Footer Link */}
-          <p className="text-xs text-center mt-8 font-medium" style={{ color: 'var(--text-disabled)' }}>
+          <p style={{ fontSize: 12, textAlign: 'center', marginTop: 28, color: 'rgba(0,0,0,0.4)', fontWeight: 500 }}>
             Already have an account?{' '}
             <Link
               to="/login"
-              className="font-bold hover:underline transition-all ml-1"
-              style={{ color: '#5DCAA5' }}
+              style={{ color: '#5DCAA5', fontWeight: 700, textDecoration: 'none' }}
             >
               Sign in
             </Link>
