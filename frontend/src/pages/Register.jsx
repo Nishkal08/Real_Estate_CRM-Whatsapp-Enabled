@@ -206,8 +206,8 @@ export default function Register() {
               {step === 1
                 ? 'Get your AI sales assistant running in minutes'
                 : step === 2
-                ? 'We configure the agent based on your company details'
-                : 'Confirm your credentials and launch your workspace'}
+                  ? 'We configure the agent based on your company details'
+                  : 'Confirm your credentials and launch your workspace'}
             </p>
           </div>
 
@@ -417,7 +417,7 @@ export default function Register() {
                     fontWeight: 700,
                     background: ACCENT,
                     borderColor: ACCENT,
-                    color: '#0d0d0d',
+                    color: 'rgb(255, 255, 255)',
                     letterSpacing: '-0.01em',
                   }}
                   onClick={handleNextStep}
