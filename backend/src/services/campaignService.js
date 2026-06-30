@@ -8,15 +8,15 @@ async function createCampaign(businessId, data) {
   return prisma.campaign.create({
     data: {
       businessId,
-      name:             data.name,
-      kbId:             data.kbId || null,
-      agentTone:        data.agentTone || 'friendly',
-      openingTemplate:  data.openingTemplate || null,
+      name: data.name,
+      kbId: data.kbId || null,
+      agentTone: data.agentTone || 'friendly',
+      openingTemplate: data.openingTemplate || null,
       followupSchedule: JSON.stringify(data.followupSchedule || { day1: true, day3: true, day7: false }),
-      sendWindowStart:  data.sendWindowStart || '10:00',
-      sendWindowEnd:    data.sendWindowEnd   || '19:00',
-      language:         data.language || 'en',
-      status:           'draft',
+      sendWindowStart: data.sendWindowStart || '10:00',
+      sendWindowEnd: data.sendWindowEnd || '19:00',
+      language: data.language || 'en',
+      status: 'draft',
     },
   });
 }
@@ -124,7 +124,7 @@ async function getCampaignById(id, businessId) {
     qualified,
     converted,
     followupSchedule: safeParseJSON(campaign.followupSchedule),
-    statusBreakdown:  statusCounts.reduce((acc, s) => {
+    statusBreakdown: statusCounts.reduce((acc, s) => {
       acc[s.status] = s._count;
       return acc;
     }, {}),
@@ -140,14 +140,14 @@ async function updateCampaign(id, businessId, data) {
   if (!campaign) throw ApiError.notFound('Campaign not found');
 
   const updateData = {};
-  if (data.name !== undefined)             updateData.name             = data.name;
-  if (data.kbId !== undefined)             updateData.kbId             = data.kbId;
-  if (data.agentTone !== undefined)        updateData.agentTone        = data.agentTone;
-  if (data.openingTemplate !== undefined)  updateData.openingTemplate  = data.openingTemplate;
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.kbId !== undefined) updateData.kbId = data.kbId;
+  if (data.agentTone !== undefined) updateData.agentTone = data.agentTone;
+  if (data.openingTemplate !== undefined) updateData.openingTemplate = data.openingTemplate;
   if (data.followupSchedule !== undefined) updateData.followupSchedule = JSON.stringify(data.followupSchedule);
-  if (data.sendWindowStart !== undefined)  updateData.sendWindowStart  = data.sendWindowStart;
-  if (data.sendWindowEnd !== undefined)    updateData.sendWindowEnd    = data.sendWindowEnd;
-  if (data.language !== undefined)         updateData.language         = data.language;
+  if (data.sendWindowStart !== undefined) updateData.sendWindowStart = data.sendWindowStart;
+  if (data.sendWindowEnd !== undefined) updateData.sendWindowEnd = data.sendWindowEnd;
+  if (data.language !== undefined) updateData.language = data.language;
 
   return prisma.campaign.update({ where: { id }, data: updateData });
 }
@@ -169,10 +169,10 @@ async function launchCampaign(id, businessId) {
   for (const lead of leads) {
     await prisma.conversation.create({
       data: {
-        leadId:           lead.id,
+        leadId: lead.id,
         businessId,
         langraphThreadId: lead.phone,
-        stage:            'opener',
+        stage: 'opener',
       },
     });
   }
@@ -317,7 +317,7 @@ async function initiateSandboxDemoOutreach(campaignId, businessId) {
 
       // 3. Call AI Service to generate personalized opener
       const instruction = `Greet the lead ${lead.name} warmly on WhatsApp to initiate contact. Introduce yourself as Pranjal, senior sales consultant for Horizon Group. Inquire if they are looking for commercial or residential property. Keep it structured with emojis.`;
-      
+
       const response = await fetch(`${AI_SERVICE_URL}/agent/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -334,9 +334,7 @@ async function initiateSandboxDemoOutreach(campaignId, businessId) {
       });
 
       if (!response.ok) {
-        const errBody = await response.text();
-        const cleanErr = errBody.length > 200 ? errBody.substring(0, 200) + '...' : errBody;
-        throw new Error(`AI service returned ${response.status}: ${cleanErr}`);
+        throw new Error(`AI service returned ${response.status}: ${await response.text()}`);
       }
 
       const result = await response.json();

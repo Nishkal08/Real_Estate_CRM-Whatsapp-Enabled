@@ -71,4 +71,12 @@ router.put('/:id/status', auth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// DELETE /api/leads/clear
+router.delete('/clear', auth, async (req, res, next) => {
+  try {
+    const result = await leadService.clearLeads(req.user.businessId);
+    res.json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

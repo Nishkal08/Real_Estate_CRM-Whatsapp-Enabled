@@ -46,4 +46,12 @@ router.put('/me', auth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// POST /api/auth/reset-demo
+router.post('/reset-demo', auth, async (req, res, next) => {
+  try {
+    const result = await authService.resetDemoData(req.user.businessId);
+    res.json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

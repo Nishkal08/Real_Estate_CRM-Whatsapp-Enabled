@@ -169,6 +169,17 @@ async function embedDocument(kbId, docId, buffer, fileName, description = '') {
   }
 }
 
+async function clearKB(kbId, businessId) {
+  const docs = await prisma.kbDocument.findMany({
+    where: { kbId }
+  });
+
+  for (const doc of docs) {
+    await deleteDocument(kbId, doc.id, businessId);
+  }
+  return { cleared: true, count: docs.length };
+}
+
 function getSourceType(fileName) {
   const ext = fileName.split('.').pop().toLowerCase();
   if (ext === 'pdf') return 'pdf';
@@ -177,5 +188,6 @@ function getSourceType(fileName) {
   return 'other';
 }
 
-module.exports = { createKB, listKBs, uploadDocument, ingestURL, getDocuments, deleteDocument };
+module.exports = { createKB, listKBs, uploadDocument, ingestURL, getDocuments, deleteDocument, clearKB };
+
 

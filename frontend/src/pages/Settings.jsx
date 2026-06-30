@@ -157,46 +157,129 @@ function APIKeysTab() {
 }
 
 function DangerZoneTab() {
+  const [clearingKB, setClearingKB] = useState(false);
+  const [deletingLeads, setDeletingLeads] = useState(false);
+  const [resettingDemo, setResettingDemo] = useState(false);
+
+  const handleClearKB = async () => {
+    if (!window.confirm("Are you absolutely sure you want to clear the entire Knowledge Base? This will delete all uploaded files and embedded chunks, and CANNOT be undone.")) {
+      return;
+    }
+    setClearingKB(true);
+    try {
+      // Fetch KBs list first to get current KB ID
+      const kbsRes = await api.get('/kb');
+      const activeKb = kbsRes.data.data?.[0];
+      if (!activeKb) {
+        toast.error("No active Knowledge Base found.");
+        return;
+      }
+      await api.delete(`/kb/${activeKb.id}/clear`);
+      toast.success("Knowledge Base cleared successfully!");
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to clear Knowledge Base");
+    } finally {
+      setClearingKB(false);
+    }
+  };
+
+  const handleDeleteLeads = async () => {
+    if (!window.confirm("Are you absolutely sure you want to delete all leads, conversation history, and calendar bookings? This action is permanent and CANNOT be undone.")) {
+      return;
+    }
+    setDeletingLeads(true);
+    try {
+      await api.delete('/leads/clear');
+      toast.success("All leads and conversation logs deleted!");
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to delete leads");
+    } finally {
+      setDeletingLeads(false);
+    }
+  };
+
+  const handleResetDemo = async () => {
+    if (!window.confirm("Are you sure you want to restore the application to the default SolarBright demo state? This will clear all current records and recreate the standard demo setup.")) {
+      return;
+    }
+    setResettingDemo(true);
+    try {
+      await api.post('/auth/reset-demo');
+      toast.success("Demo data restored successfully!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to restore demo data");
+    } finally {
+      setResettingDemo(false);
+    }
+  };
+
   return (
     <div className="space-y-4 max-w-xl">
-      {[
-        {
-          title: 'Clear Knowledge Base',
-          desc: 'Delete all uploaded documents and embedded chunks. This cannot be undone.',
-          btn: 'Clear KB',
-        },
-        {
-          title: 'Delete All Leads',
-          desc: 'Permanently delete all lead records and conversation history.',
-          btn: 'Delete Leads',
-        },
-        {
-          title: 'Reset Demo Data',
-          desc: 'Restore the app to the original SolarBright demo state.',
-          btn: 'Reset to Demo',
-        },
-      ].map(item => (
-        <div key={item.title} className="flex items-start justify-between p-4 rounded-xl" style={{ background: 'var(--danger-bg)', border: '1px solid rgba(220,38,38,0.2)' }}>
-          <div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>{item.title}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{item.desc}</p>
-          </div>
-          <Button
-            variant="danger"
-            size="sm"
-            className="flex-shrink-0 ml-4"
-            onClick={() => toast.error(`${item.btn} requires confirmation — coming soon`)}
-          >
-            {item.btn}
-          </Button>
+      <div className="flex items-start justify-between p-4 rounded-xl" style={{ background: 'var(--danger-bg)', border: '1px solid rgba(220,38,38,0.2)' }}>
+        <div>
+          <p className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Clear Knowledge Base</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Delete all uploaded documents and embedded chunks. This cannot be undone.</p>
         </div>
-      ))}
+        <Button
+          variant="danger"
+          size="sm"
+          className="flex-shrink-0 ml-4"
+          loading={clearingKB}
+          onClick={handleClearKB}
+        >
+          Clear KB
+        </Button>
+      </div>
+
+      <div className="flex items-start justify-between p-4 rounded-xl" style={{ background: 'var(--danger-bg)', border: '1px solid rgba(220,38,38,0.2)' }}>
+        <div>
+          <p className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Delete All Leads</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Permanently delete all lead records and conversation history.</p>
+        </div>
+        <Button
+          variant="danger"
+          size="sm"
+          className="flex-shrink-0 ml-4"
+          loading={deletingLeads}
+          onClick={handleDeleteLeads}
+        >
+          Delete Leads
+        </Button>
+      </div>
+
+      <div className="flex items-start justify-between p-4 rounded-xl" style={{ background: 'var(--danger-bg)', border: '1px solid rgba(220,38,38,0.2)' }}>
+        <div>
+          <p className="text-sm font-semibold" style={{ color: 'var(--danger)' }}>Reset Demo Data</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Restore the app to the original SolarBright demo state.</p>
+        </div>
+        <Button
+          variant="danger"
+          size="sm"
+          className="flex-shrink-0 ml-4"
+          loading={resettingDemo}
+          onClick={handleResetDemo}
+        >
+          Reset to Demo
+        </Button>
+      </div>
     </div>
   );
 }
 
 export default function Settings() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState('profile');
+
+  const isDemoUser = user?.email === 'demo@solarbright.in';
+  const visibleTabs = TABS.filter(tab => {
+    if (tab.id === 'api' || tab.id === 'danger') {
+      return isDemoUser;
+    }
+    return true;
+  });
 
   const CONTENT = {
     profile: <ProfileTab />,
@@ -214,7 +297,7 @@ export default function Settings() {
       <div className="flex gap-6">
         {/* Sidebar nav */}
         <div className="w-48 flex-shrink-0 space-y-1">
-          {TABS.map(tab => (
+          {visibleTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}

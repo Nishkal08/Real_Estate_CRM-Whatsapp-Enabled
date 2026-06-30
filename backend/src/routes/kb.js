@@ -57,4 +57,12 @@ router.delete('/:id/document/:docId', auth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// DELETE /api/kb/:id/clear
+router.delete('/:id/clear', auth, async (req, res, next) => {
+  try {
+    const result = await kbService.clearKB(req.params.id, req.user.businessId);
+    res.json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

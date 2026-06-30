@@ -149,4 +149,42 @@ async function updateLeadStatus(id, businessId, status) {
   });
 }
 
-module.exports = { uploadLeads, listLeads, getLeadById, updateLeadStatus };
+async function clearLeads(businessId) {
+  const leads = await prisma.lead.findMany({
+    where: { businessId },
+    select: { id: true }
+  });
+  const leadIds = leads.map(l => l.id);
+
+  if (leadIds.length > 0) {
+    // 1. Delete FollowUps
+    await prisma.followUp.deleteMany({
+      where: { leadId: { in: leadIds } }
+    });
+
+    // 2. Delete Messages
+    await prisma.message.deleteMany({
+      where: { conversation: { leadId: { in: leadIds } } }
+    });
+
+    // 3. Delete Conversations
+    await prisma.conversation.deleteMany({
+      where: { leadId: { in: leadIds } }
+    });
+
+    // 4. Delete Leads
+    await prisma.lead.deleteMany({
+      where: { id: { in: leadIds } }
+    });
+  }
+
+  // 5. Delete Appointments
+  await prisma.appointment.deleteMany({
+    where: { businessId }
+  });
+
+  return { cleared: true, count: leadIds.length };
+}
+
+module.exports = { uploadLeads, listLeads, getLeadById, updateLeadStatus, clearLeads };
+
