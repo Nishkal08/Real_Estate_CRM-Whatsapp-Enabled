@@ -3,6 +3,7 @@ import { Terminal, Users, Megaphone, MessageSquare, Trash2, Building, BarChart3,
 import { PageWrapper } from '@/components/layout/PageWrapper';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { StatCard } from '@/components/analytics/StatCard';
 import { toast } from '@/stores/uiStore';
 import api from '@/services/api';
 
@@ -109,45 +110,34 @@ export default function AdminPortal() {
     <PageWrapper>
       {/* Metrics Row */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Registered Businesses</p>
-            <h3 className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{stats?.businesses || 0}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[rgba(196,101,74,0.1)] text-[var(--accent)]">
-            <Building size={20} />
-          </div>
-        </div>
-
-        <div className="card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Total Platform Leads</p>
-            <h3 className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{stats?.leads || 0}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[rgba(16,185,129,0.1)] text-[var(--success)]">
-            <Users size={20} />
-          </div>
-        </div>
-
-        <div className="card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Active Campaigns</p>
-            <h3 className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{stats?.campaigns || 0}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[rgba(59,130,246,0.15)] text-[var(--primary)]">
-            <Megaphone size={20} />
-          </div>
-        </div>
-
-        <div className="card p-5 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Total WhatsApp Messages</p>
-            <h3 className="text-2xl font-bold mt-1" style={{ color: 'var(--text-primary)' }}>{stats?.messages || 0}</h3>
-          </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[rgba(245,158,11,0.15)] text-[var(--warning)]">
-            <MessageSquare size={20} />
-          </div>
-        </div>
+        <StatCard
+          title="Registered Businesses"
+          value={stats?.businesses || 0}
+          icon={<Building size={16} />}
+          color="accent"
+          loading={loading}
+        />
+        <StatCard
+          title="Total Platform Leads"
+          value={stats?.leads || 0}
+          icon={<Users size={16} />}
+          color="success"
+          loading={loading}
+        />
+        <StatCard
+          title="Active Campaigns"
+          value={stats?.campaigns || 0}
+          icon={<Megaphone size={16} />}
+          color="accent"
+          loading={loading}
+        />
+        <StatCard
+          title="Total WhatsApp Messages"
+          value={stats?.messages || 0}
+          icon={<MessageSquare size={16} />}
+          color="warning"
+          loading={loading}
+        />
       </div>
 
       {/* Main Content */}
